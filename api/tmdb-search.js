@@ -10,7 +10,8 @@ export default async function handler(req, res) {
     const data = await fetch(url, {
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }
     }).then(r => r.json())
-    res.status(200).json({ results: data.results || [] })
+    if (!data.results) return res.status(200).json({ results: [], _debug: data })
+    res.status(200).json({ results: data.results })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
