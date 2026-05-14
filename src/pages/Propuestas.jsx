@@ -12,9 +12,13 @@ function MovieSearch({ onSelect }) {
     if (!q.trim()) return
     setLoad(true)
     try {
-      const r = await fetch(`/api/tmdb-search?q=${encodeURIComponent(q)}`).then(r => r.json())
+      const resp = await fetch(`/api/tmdb-search?q=${encodeURIComponent(q)}`)
+      const r = await resp.json()
+      console.log('TMDB response:', r)
       setRes(r.results || [])
-    } catch {}
+    } catch (e) {
+      console.error('Search error:', e)
+    }
     setLoad(false)
   }
 
