@@ -24,7 +24,8 @@ export default async function handler(req, res) {
       const data = await fetch(url, {
         headers: { Authorization: `Bearer ${key}` }
       }).then(r => r.json())
-      return res.status(200).json({ results: data.results || [] })
+      const directors = (data.results || []).filter(p => p.known_for_department === 'Directing')
+      return res.status(200).json({ results: directors })
     }
 
     // Búsqueda de película (por defecto)
