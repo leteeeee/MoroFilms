@@ -1,27 +1,52 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Search, X, Calendar, Clapperboard, Check, Film } from 'lucide-react'
+import { Search, X, Calendar, Clapperboard, Check, Film, User, ArrowLeft } from 'lucide-react'
 import './Propuestas.css'
 
 export default function Propuestas({ user }) {
-  const [q, setQ]             = useState('')
-  const [results, setRes]     = useState([])
-  const [loading, setLoad]    = useState(false)
-  const [selected, setSelec]  = useState(null)
-  const [fecha, setFecha]     = useState('')
-  const [saving, setSaving]   = useState(false)
+  const [mode, setMode]         = useState('movie')   // 'movie' | 'director'
+  const [q, setQ]               = useState('')
+  const [results, setRes]       = useState([])
+  const [loading, setLoad]      = useState(false)
+  const [director, setDirector] = useState(null)      // director seleccionado
+  const [dirFilms, setDirFilms] = useState([])
+  const [loadingDir, setLoadDir]= useState(false)
+  const [selected, setSelec]    = useState(null)
+  const [fecha, setFecha]       = useState('')
+  const [saving, setSaving]     = useState(false)
 
   const search = async () => {
     if (!q.trim()) return
     setLoad(true)
     try {
-      const resp = await fetch(`/api/tmdb-search?q=${encodeURIComponent(q)}`)
-      const r = await resp.json()
+      const url = mode === 'director'
+        ? `/api/tmdb-search?q=${encodeURIComponent(q)}&type=person`
+        : `/api/tmdb-search?q=${encodeURIComponent(q)}`
+      const r = await fetch(url).then(r => r.json())
       setRes(r.results || [])
-    } catch (e) {
-      console.error('Search error:', e)
-    }
+    } catch (e) { console.error(e) }
     setLoad(false)
+  }
+
+  const selectDirector = async (person) => {
+    setDirector(person)
+    setRes([])
+    setLoadDir(true)
+    try {
+      const r = await fetch(`/api/tmdb-search?id=${person.id}`).then(r => r.json())
+      setDirFilms(r.results || [])
+    } catch (e) { console.error(e) }
+    setLoadDir(false)
+  }
+
+  const resetDirector = () => {
+    setDirector(null)
+    setDirFilms([])
+  }
+
+  const switchMode = (m) => {
+    setMode(m); setQ(''); setRes([])
+    setDirector(null); setDirFilms([])
   }
 
   const handleActivar = async () => {
@@ -40,10 +65,8 @@ export default function Propuestas({ user }) {
       activa:          true,
     })
     setSaving(false)
-    setSelec(null)
-    setFecha('')
-    setQ('')
-    setRes([])
+    setSelec(null); setFecha(''); setQ(''); setRes([])
+    setDirector(null); setDirFilms([])
   }
 
   return (
@@ -55,49 +78,110 @@ export default function Propuestas({ user }) {
         </div>
       </div>
 
-      {/* Búsqueda */}
-      <div className="movie-search">
-        <div className="movie-search-bar">
-          <Search size={15} className="ms-icon"/>
-          <input
-            className="ms-input"
-            placeholder="Buscar película…"
-            value={q}
-            onChange={e => setQ(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && search()}
-          />
-          {q && (
-            <button className="ms-clear" onClick={() => { setQ(''); setRes([]) }}>
-              <X size={14}/>
-            </button>
-          )}
-          <button className="ms-btn" onClick={search}>Buscar</button>
-        </div>
-
-        {loading && <div className="ms-loading"><span className="spinner"/> Buscando…</div>}
-
-        <div className="ms-results">
-          {results.map(m => (
-            <div key={m.id} className="ms-result" onClick={() => setSelec(m)}>
-              {m.poster_path
-                ? <img src={`https://image.tmdb.org/t/p/w92${m.poster_path}`} alt={m.title}/>
-                : <div className="ms-no-poster"><Clapperboard size={16}/></div>
-              }
-              <div className="ms-result-info">
-                <p className="ms-result-title">{m.title}</p>
-                <p className="ms-result-year">{m.release_date?.slice(0, 4)}</p>
-              </div>
-              <Film size={16} className="ms-add-icon"/>
-            </div>
-          ))}
-        </div>
+      {/* Toggle modo */}
+      <div className="prop-mode-tabs">
+        <button
+          className={`prop-mode-tab ${mode === 'movie' ? 'active' : ''}`}
+          onClick={() => switchMode('movie')}
+        >
+          <Film size={13}/> Película
+        </button>
+        <button
+          className={`prop-mode-tab ${mode === 'director' ? 'active' : ''}`}
+          onClick={() => switchMode('director')}
+        >
+          <User size={13}/> Director
+        </button>
       </div>
 
+      {/* Búsqueda */}
+      {!director && (
+        <div className="movie-search">
+          <div className="movie-search-bar">
+            <Search size={15} className="ms-icon"/>
+            <input
+              className="ms-input"
+              placeholder={mode === 'director' ? 'Buscar director…' : 'Buscar película…'}
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && search()}
+            />
+            {q && (
+              <button className="ms-clear" onClick={() => { setQ(''); setRes([]) }}>
+                <X size={14}/>
+              </button>
+            )}
+            <button className="ms-btn" onClick={search}>Buscar</button>
+          </div>
+
+          {loading && <div className="ms-loading"><span className="spinner"/> Buscando…</div>}
+
+          <div className="ms-results">
+            {mode === 'movie' && results.map(m => (
+              <div key={m.id} className="ms-result" onClick={() => setSelec(m)}>
+                {m.poster_path
+                  ? <img src={`https://image.tmdb.org/t/p/w92${m.poster_path}`} alt={m.title}/>
+                  : <div className="ms-no-poster"><Clapperboard size={16}/></div>
+                }
+                <div className="ms-result-info">
+                  <p className="ms-result-title">{m.title}</p>
+                  <p className="ms-result-year">{m.release_date?.slice(0, 4)}</p>
+                </div>
+                <Film size={16} className="ms-add-icon"/>
+              </div>
+            ))}
+
+            {mode === 'director' && results.map(p => (
+              <div key={p.id} className="ms-result" onClick={() => selectDirector(p)}>
+                {p.profile_path
+                  ? <img src={`https://image.tmdb.org/t/p/w92${p.profile_path}`} alt={p.name}/>
+                  : <div className="ms-no-poster"><User size={16}/></div>
+                }
+                <div className="ms-result-info">
+                  <p className="ms-result-title">{p.name}</p>
+                  <p className="ms-result-year">{p.known_for_department}</p>
+                </div>
+                <Film size={16} className="ms-add-icon"/>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Filmografía del director */}
+      {director && (
+        <div className="movie-search">
+          <button className="prop-back-btn" onClick={resetDirector}>
+            <ArrowLeft size={14}/> {director.name}
+          </button>
+          {loadingDir
+            ? <div className="ms-loading"><span className="spinner"/> Cargando filmografía…</div>
+            : (
+              <div className="ms-results">
+                {dirFilms.map(m => (
+                  <div key={m.id} className="ms-result" onClick={() => setSelec(m)}>
+                    {m.poster_path
+                      ? <img src={`https://image.tmdb.org/t/p/w92${m.poster_path}`} alt={m.title}/>
+                      : <div className="ms-no-poster"><Clapperboard size={16}/></div>
+                    }
+                    <div className="ms-result-info">
+                      <p className="ms-result-title">{m.title}</p>
+                      <p className="ms-result-year">{m.release_date?.slice(0, 4)}</p>
+                    </div>
+                    <Film size={16} className="ms-add-icon"/>
+                  </div>
+                ))}
+              </div>
+            )
+          }
+        </div>
+      )}
+
       {/* Info vacía */}
-      {!loading && results.length === 0 && !q && (
+      {!loading && results.length === 0 && !q && !director && (
         <div className="prop-empty">
           <Clapperboard size={40} strokeWidth={1}/>
-          <p>Busca una película para ponerla como siguiente.</p>
+          <p>Busca una película o director para elegir la siguiente.</p>
         </div>
       )}
 

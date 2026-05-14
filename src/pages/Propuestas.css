@@ -18,6 +18,30 @@
 }
 .prop-add-btn:hover { background: var(--red-hover); }
 
+/* Tabs modo */
+.prop-mode-tabs {
+  display: flex; width: 100%; margin-bottom: 16px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 4px; padding: 3px; gap: 3px;
+}
+.prop-mode-tab {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px; border-radius: 3px; border: none;
+  background: none; color: var(--gray);
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.3px;
+  transition: all 0.15s;
+}
+.prop-mode-tab.active { background: var(--red); color: #fff; }
+
+/* Botón volver director */
+.prop-back-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; color: var(--gray);
+  font-size: 0.82rem; font-weight: 700; padding: 0 0 12px;
+  transition: color 0.15s;
+}
+.prop-back-btn:hover { color: var(--cream); }
+
 /* Búsqueda */
 .movie-search { margin-bottom: 22px; }
 .movie-search-bar {
