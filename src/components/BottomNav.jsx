@@ -3,7 +3,7 @@ import './BottomNav.css'
 
 const TABS = [
   { id: 'home',      label: 'Inicio',    Icon: Home         },
-  { id: 'propuestas',label: 'Propuestas',Icon: Clapperboard },
+  { id: 'propuestas',label: 'Elegir',    Icon: Clapperboard },
   { id: 'historial', label: 'Historial', Icon: BookOpen     },
 ]
 
