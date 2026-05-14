@@ -1,0 +1,56 @@
+.hist-page { max-width: 520px; margin: 0 auto; padding: 24px 16px 32px; }
+
+.hist-loading {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; color: var(--gray); min-height: 60vh; font-size: 0.9rem;
+}
+
+.hist-header { margin-bottom: 20px; }
+.hist-title { font-size: 1.6rem; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+.hist-sub   { font-size: 0.82rem; color: var(--gray); margin-top: 2px; }
+
+.hist-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  color: var(--gray); padding: 60px 20px; text-align: center; font-size: 0.88rem;
+}
+.hist-empty svg { color: var(--border); }
+
+.hist-list { display: flex; flex-direction: column; gap: 14px; }
+
+.hist-card {
+  display: flex; gap: 14px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden; padding: 14px;
+}
+.hist-poster {
+  width: 80px; flex-shrink: 0; border-radius: 8px;
+  object-fit: cover; align-self: flex-start;
+}
+.hist-info { flex: 1; min-width: 0; }
+.hist-titulo { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0 0 2px; }
+.hist-anio   { font-size: 0.75rem; color: var(--gray); margin: 0 0 8px; }
+
+.hist-media {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.78rem; color: var(--gold); margin-bottom: 10px;
+}
+.hist-media strong { font-weight: 700; }
+
+.hist-resenas { display: flex; flex-direction: column; gap: 8px; }
+.hist-resena {
+  background: var(--gray-dim); border-radius: 8px;
+  padding: 8px 10px;
+}
+.hist-resena-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px;
+}
+.hist-resena-nombre { font-size: 0.78rem; font-weight: 700; color: var(--text); }
+.hist-resena-nota {
+  display: flex; align-items: center; gap: 3px;
+  font-size: 0.78rem; font-weight: 700; color: var(--gold);
+}
+.hist-resena-texto {
+  font-size: 0.78rem; color: var(--gray); line-height: 1.4;
+}
+.hist-pending { font-size: 0.75rem; color: var(--gray); font-style: italic; }

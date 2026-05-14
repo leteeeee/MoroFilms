@@ -1,0 +1,4 @@
+.main-content {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  min-height: 100dvh;
+}
