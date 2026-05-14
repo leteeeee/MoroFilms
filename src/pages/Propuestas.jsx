@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Search, X, Calendar, Clapperboard, Check, Film, User, ArrowLeft } from 'lucide-react'
+import { Search, X, Clapperboard, Check, Film, User, ArrowLeft, Clock } from 'lucide-react'
 import './Propuestas.css'
 
 export default function Propuestas({ user }) {
@@ -12,8 +12,13 @@ export default function Propuestas({ user }) {
   const [dirFilms, setDirFilms] = useState([])
   const [loadingDir, setLoadDir]= useState(false)
   const [selected, setSelec]    = useState(null)
-  const [fecha, setFecha]       = useState('')
   const [saving, setSaving]     = useState(false)
+
+  const fechaLimite = () => {
+    const d = new Date()
+    d.setDate(d.getDate() + 3)
+    return d.toISOString().slice(0, 10)
+  }
 
   const search = async () => {
     if (!q.trim()) return
@@ -60,12 +65,12 @@ export default function Propuestas({ user }) {
       poster:          selected.poster_path,
       anio:            parseInt(selected.release_date?.slice(0, 4)),
       descripcion:     selected.overview,
-      fecha_limite:    fecha || null,
+      fecha_limite:    fechaLimite(),
       elegida_por:     user.id,
       activa:          true,
     })
     setSaving(false)
-    setSelec(null); setFecha(''); setQ(''); setRes([])
+    setSelec(null); setQ(''); setRes([])
     setDirector(null); setDirFilms([])
   }
 
@@ -118,7 +123,7 @@ export default function Propuestas({ user }) {
 
           <div className="ms-results">
             {mode === 'movie' && results.map(m => (
-              <div key={m.id} className="ms-result" onClick={() => setSelec(m)}>
+              <div key={m.id} className="ms-result" onClick={() => { setSelec(m); setFecha(defaultFecha()) }}>
                 {m.poster_path
                   ? <img src={`https://image.tmdb.org/t/p/w92${m.poster_path}`} alt={m.title}/>
                   : <div className="ms-no-poster"><Clapperboard size={16}/></div>
@@ -159,7 +164,7 @@ export default function Propuestas({ user }) {
             : (
               <div className="ms-results">
                 {dirFilms.map(m => (
-                  <div key={m.id} className="ms-result" onClick={() => setSelec(m)}>
+                  <div key={m.id} className="ms-result" onClick={() => { setSelec(m); setFecha(defaultFecha()) }}>
                     {m.poster_path
                       ? <img src={`https://image.tmdb.org/t/p/w92${m.poster_path}`} alt={m.title}/>
                       : <div className="ms-no-poster"><Clapperboard size={16}/></div>
@@ -190,16 +195,11 @@ export default function Propuestas({ user }) {
         <div className="modal-overlay" onClick={() => setSelec(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3>Poner como siguiente: <em>{selected.title}</em></h3>
-            <p className="modal-sub">¿Antes de qué fecha tenéis que verla?</p>
             <div className="modal-date-row">
-              <Calendar size={16}/>
-              <input
-                type="date"
-                className="modal-date-input"
-                value={fecha}
-                onChange={e => setFecha(e.target.value)}
-                min={new Date().toISOString().slice(0, 10)}
-              />
+              <Clock size={16}/>
+              <span style={{ fontSize: '0.88rem', color: 'var(--text)' }}>
+                Plazo: <strong>3 días</strong> para verla
+              </span>
             </div>
             <div className="modal-actions">
               <button className="modal-cancel" onClick={() => setSelec(null)}>Cancelar</button>
