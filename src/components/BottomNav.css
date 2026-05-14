@@ -3,12 +3,20 @@
   bottom: 0; left: 0; right: 0;
   height: calc(64px + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
-  background: rgba(10,10,15,.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(13,10,10,.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
   display: flex;
   z-index: 100;
+}
+
+/* Línea roja decorativa arriba del nav */
+.bnav::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
 }
 
 .bnav-tab {
@@ -18,9 +26,9 @@
   gap: 3px;
   background: none; border: none;
   color: var(--gray);
-  font-size: 0.65rem; font-weight: 600;
-  letter-spacing: 0.3px;
+  font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.8px; text-transform: uppercase;
   transition: color 0.15s;
 }
-.bnav-tab.active { color: var(--gold); }
-.bnav-tab:not(.active):hover { color: var(--text); }
+.bnav-tab.active { color: var(--red); }
+.bnav-tab:not(.active):hover { color: var(--cream); }
