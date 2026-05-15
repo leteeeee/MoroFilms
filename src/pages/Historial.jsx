@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Star, Film } from 'lucide-react'
+import { Star, Film, Trash2, X } from 'lucide-react'
 import './Historial.css'
 
 export default function Historial({ nombres }) {
   const [peliculas, setPeliculas] = useState([])
   const [loading, setLoading]     = useState(true)
+  const [editMode, setEditMode]   = useState(false)
 
-  useEffect(() => {
+  const load = () => {
     supabase
       .from('peliculas')
       .select('*, resenas(*)')
@@ -17,7 +18,15 @@ export default function Historial({ nombres }) {
         setPeliculas(data || [])
         setLoading(false)
       })
-  }, [])
+  }
+
+  useEffect(() => { load() }, [])
+
+  const handleDelete = async (id) => {
+    await supabase.from('resenas').delete().eq('pelicula_id', id)
+    await supabase.from('peliculas').delete().eq('id', id)
+    setPeliculas(prev => prev.filter(p => p.id !== id))
+  }
 
   if (loading) return (
     <div className="hist-loading"><span className="spinner"/> Cargando…</div>
@@ -26,8 +35,15 @@ export default function Historial({ nombres }) {
   return (
     <div className="hist-page">
       <div className="hist-header">
-        <h1 className="hist-title">Historial</h1>
-        <p className="hist-sub">{peliculas.length} película{peliculas.length !== 1 ? 's' : ''} vistas</p>
+        <div>
+          <h1 className="hist-title">Historial</h1>
+          <p className="hist-sub">{peliculas.length} película{peliculas.length !== 1 ? 's' : ''} vistas</p>
+        </div>
+        {peliculas.length > 0 && (
+          <button className={`hist-edit-btn ${editMode ? 'active' : ''}`} onClick={() => setEditMode(e => !e)}>
+            {editMode ? <><X size={14}/> Listo</> : <><Trash2 size={14}/> Editar</>}
+          </button>
+        )}
       </div>
 
       {peliculas.length === 0 ? (
@@ -44,7 +60,12 @@ export default function Historial({ nombres }) {
               : null
 
             return (
-              <div key={p.id} className="hist-card">
+              <div key={p.id} className={`hist-card ${editMode ? 'hist-card--edit' : ''}`}>
+                {editMode && (
+                  <button className="hist-delete-btn" onClick={() => handleDelete(p.id)}>
+                    <Trash2 size={16}/>
+                  </button>
+                )}
                 {p.poster && (
                   <img src={`https://image.tmdb.org/t/p/w185${p.poster}`}
                     alt={p.titulo} className="hist-poster"/>
@@ -60,7 +81,6 @@ export default function Historial({ nombres }) {
                     </div>
                   )}
 
-                  {/* Reseñas individuales */}
                   <div className="hist-resenas">
                     {resenas.map(r => (
                       <div key={r.id} className="hist-resena">

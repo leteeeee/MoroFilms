@@ -5,7 +5,23 @@
   gap: 10px; color: var(--gray); min-height: 60vh; font-size: 0.9rem;
 }
 
-.hist-header { margin-bottom: 22px; }
+.hist-header { margin-bottom: 22px; display: flex; justify-content: space-between; align-items: flex-start; }
+.hist-edit-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: none; border: 1px solid var(--border);
+  border-radius: 4px; padding: 7px 12px;
+  color: var(--gray); font-size: 0.75rem; font-weight: 600;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.hist-edit-btn.active { border-color: var(--red); color: var(--red); }
+.hist-card--edit { position: relative; border-left-color: var(--red); opacity: 0.9; }
+.hist-delete-btn {
+  position: absolute; top: 10px; right: 10px;
+  background: var(--red); border: none; border-radius: 4px;
+  color: #fff; padding: 6px; display: flex; align-items: center;
+  transition: background 0.15s;
+}
+.hist-delete-btn:hover { background: var(--red-hover); }
 .hist-title {
   font-family: var(--serif);
   font-size: 2rem; font-weight: 800; color: var(--cream); letter-spacing: -0.5px;

@@ -57,7 +57,19 @@ export default function Propuestas({ user }) {
   const handleActivar = async () => {
     if (!selected) return
     setSaving(true)
-    await supabase.from('peliculas').update({ activa: false }).eq('activa', true)
+
+    const { data: pelActiva } = await supabase
+      .from('peliculas').select('id').eq('activa', true).single()
+    if (pelActiva) {
+      const { data: resenas } = await supabase
+        .from('resenas').select('id').eq('pelicula_id', pelActiva.id)
+      if (resenas?.length === 0) {
+        await supabase.from('peliculas').delete().eq('id', pelActiva.id)
+      } else {
+        await supabase.from('peliculas').update({ activa: false }).eq('id', pelActiva.id)
+      }
+    }
+
     await supabase.from('peliculas').insert({
       tmdb_id:         selected.id,
       titulo:          selected.title,

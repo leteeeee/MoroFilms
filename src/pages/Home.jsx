@@ -84,7 +84,20 @@ function SearchPanel({ user, onClose, onActivated }) {
   const activar = async (movie) => {
     setSaving(true)
     const d = new Date(); d.setDate(d.getDate() + 3)
-    await supabase.from('peliculas').update({ activa: false }).eq('activa', true)
+
+    // Si la peli activa no tiene reseñas, borrarla en lugar de archivarla
+    const { data: pelActiva } = await supabase
+      .from('peliculas').select('id').eq('activa', true).single()
+    if (pelActiva) {
+      const { data: resenas } = await supabase
+        .from('resenas').select('id').eq('pelicula_id', pelActiva.id)
+      if (resenas?.length === 0) {
+        await supabase.from('peliculas').delete().eq('id', pelActiva.id)
+      } else {
+        await supabase.from('peliculas').update({ activa: false }).eq('id', pelActiva.id)
+      }
+    }
+
     await supabase.from('peliculas').insert({
       tmdb_id: movie.id, titulo: movie.title,
       titulo_original: movie.original_title,
