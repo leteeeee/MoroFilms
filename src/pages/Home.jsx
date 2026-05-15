@@ -154,6 +154,7 @@ function SearchPanel({ user, onClose, onActivated }) {
   const films = director ? dirFilms : results
 
   return (
+    <>
     <div className="search-overlay">
       <div className="search-panel">
         <div className="search-handle"/>
@@ -204,7 +205,7 @@ function SearchPanel({ user, onClose, onActivated }) {
           ))}
 
           {(mode === 'movie' || director) && films.map(m => (
-            <div key={m.id} className="ms-result" onClick={() => { setSelected(m); setDiaIdx(null) }}>
+            <div key={m.id} className="ms-result" onClick={() => setSelected(m)}>
               {m.poster_path
                 ? <img src={`https://image.tmdb.org/t/p/w92${m.poster_path}`} alt={m.title}/>
                 : <div className="ms-no-poster"><Clapperboard size={16}/></div>}
@@ -224,6 +225,7 @@ function SearchPanel({ user, onClose, onActivated }) {
           )}
         </div>
       </div>
+    </div>
 
       {/* Modal confirmar película */}
       {selected && (
@@ -240,7 +242,7 @@ function SearchPanel({ user, onClose, onActivated }) {
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
