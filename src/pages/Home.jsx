@@ -390,8 +390,8 @@ export default function Home({ user, profile, nombres, avatares }) {
         <div className="home-search-bar home-search-bar--disabled">
           <Clock size={17} className="home-search-bar-icon"/>
           <span>
-            {!plazoAcabado
-              ? `Turno de ${otroNombre} cuando acabe el plazo`
+            {!plazoAcabado && !yoElegí
+              ? 'Tu turno cuando acabe el plazo'
               : `Es el turno de ${otroNombre}`}
           </span>
         </div>

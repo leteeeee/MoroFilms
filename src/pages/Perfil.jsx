@@ -14,12 +14,16 @@ export default function Perfil({ user, profile, onProfileUpdate }) {
     setUploading(true)
     const ext = file.name.split('.').pop()
     const path = `${user.id}.${ext}`
-    const { error: upErr } = await supabase.storage
-      .from('avatars').upload(path, file, { upsert: true })
+    console.log('Uploading:', path, file.size, file.type)
+    const { data: upData, error: upErr } = await supabase.storage
+      .from('avatars').upload(path, file, { upsert: true, contentType: file.type })
+    console.log('Upload result:', upData, upErr)
     if (!upErr) {
       const { data } = supabase.storage.from('avatars').getPublicUrl(path)
       const url = `${data.publicUrl}?t=${Date.now()}`
-      await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id)
+      console.log('Public URL:', url)
+      const { error: dbErr } = await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id)
+      console.log('DB update error:', dbErr)
       onProfileUpdate()
     }
     setUploading(false)
