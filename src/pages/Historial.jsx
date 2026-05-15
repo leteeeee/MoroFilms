@@ -87,7 +87,7 @@ export default function Historial({ nombres }) {
                         <div className="hist-resena-header">
                           <span className="hist-resena-nombre">{nombres[r.usuario_id] || '—'}</span>
                           <span className="hist-resena-nota">
-                            <Star size={11} fill="currentColor"/> {r.nota}/10
+                            <Star size={11} fill="currentColor"/> {r.nota % 2 === 0 ? r.nota/2 : (r.nota/2).toFixed(1)}/5
                           </span>
                         </div>
                         {r.texto && <p className="hist-resena-texto">{r.texto}</p>}

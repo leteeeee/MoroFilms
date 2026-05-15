@@ -188,13 +188,19 @@
 .home-form-label strong { color: var(--cream); font-family: var(--serif); }
 
 .star-rating { display: flex; align-items: center; gap: 4px; }
-.star-btn {
-  background: none; border: none; color: var(--gold);
-  padding: 2px; transition: transform 0.1s;
+.star-wrap {
+  position: relative; display: inline-flex;
+  width: 26px; height: 26px;
 }
-.star-btn:hover { transform: scale(1.2); }
-.star-btn.active { color: var(--gold); }
-.star-btn:not(.active) { color: var(--border); }
+.star-half {
+  position: absolute; top: 0; height: 100%;
+  width: 50%; background: none; border: none;
+  padding: 0; z-index: 1; cursor: pointer;
+}
+.star-half-left { left: 0; }
+.star-half-right { right: 0; }
+.star-empty { color: var(--border); position: absolute; left: 0; top: 0; }
+.star-filled { color: var(--gold); position: absolute; left: 0; top: 0; }
 .star-label {
   font-size: 0.85rem; color: var(--gold); font-weight: 700;
   margin-left: 6px;

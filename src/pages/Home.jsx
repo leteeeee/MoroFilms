@@ -32,18 +32,29 @@ function Countdown({ fechaLimite }) {
 
 function StarRating({ value, onChange }) {
   const [hov, setHov] = useState(0)
-  const stars = [2, 4, 6, 8, 10]
+  const display = hov || value
   return (
     <div className="star-rating">
-      {stars.map(v => (
-        <button key={v} type="button"
-          className={`star-btn ${(hov || value) >= v ? 'active' : ''}`}
-          onMouseEnter={() => setHov(v)} onMouseLeave={() => setHov(0)}
-          onClick={() => onChange(v)}>
-          <Star size={22} fill={(hov || value) >= v ? 'currentColor' : 'none'} strokeWidth={1.5}/>
-        </button>
-      ))}
-      {value > 0 && <span className="star-label">{value}/10</span>}
+      {[1,2,3,4,5].map(star => {
+        const half = star * 2 - 1
+        const full = star * 2
+        return (
+          <div key={star} className="star-wrap">
+            <button type="button" className="star-half star-half-left"
+              onMouseEnter={() => setHov(half)} onMouseLeave={() => setHov(0)}
+              onClick={() => onChange(half)}/>
+            <button type="button" className="star-half star-half-right"
+              onMouseEnter={() => setHov(full)} onMouseLeave={() => setHov(0)}
+              onClick={() => onChange(full)}/>
+            <Star size={22} fill="none" strokeWidth={1.5} className="star-empty"/>
+            {display >= half && (
+              <Star size={22} fill="currentColor" strokeWidth={1.5} className="star-filled"
+                style={{ clipPath: display >= full ? 'none' : 'inset(0 50% 0 0)' }}/>
+            )}
+          </div>
+        )
+      })}
+      {value > 0 && <span className="star-label">{value % 2 === 0 ? value/2 : (value/2).toFixed(1)}/5</span>}
     </div>
   )
 }
@@ -229,6 +240,8 @@ function SearchPanel({ user, onClose, onActivated }) {
   )
 }
 
+const fmtNota = n => `${n % 2 === 0 ? n/2 : (n/2).toFixed(1)}/5`
+
 export default function Home({ user, profile, nombres, avatares }) {
   const [pelicula, setPelicula]         = useState(null)
   const [resenas, setResenas]           = useState([])
@@ -333,7 +346,7 @@ export default function Home({ user, profile, nombres, avatares }) {
                       }
                       <span className="home-resena-nombre">{profile?.nombre || 'Tú'}</span>
                     </div>
-                    <span className="home-resena-nota"><Star size={13} fill="currentColor"/> {miResena.nota}/10</span>
+                    <span className="home-resena-nota"><Star size={13} fill="currentColor"/> {fmtNota(miResena.nota)}</span>
                   </div>
                   {miResena.texto && <p className="home-resena-texto">{miResena.texto}</p>}
                   <button className="home-edit-btn" onClick={() => {
@@ -358,7 +371,7 @@ export default function Home({ user, profile, nombres, avatares }) {
                       }
                       <span className="home-resena-nombre">{nombres[otraResena.usuario_id] || 'El otro'}</span>
                     </div>
-                    <span className="home-resena-nota"><Star size={13} fill="currentColor"/> {otraResena.nota}/10</span>
+                    <span className="home-resena-nota"><Star size={13} fill="currentColor"/> {fmtNota(otraResena.nota)}</span>
                   </div>
                   {otraResena.texto && <p className="home-resena-texto">{otraResena.texto}</p>}
                 </div>
@@ -371,7 +384,7 @@ export default function Home({ user, profile, nombres, avatares }) {
               {ambosResenaron && (
                 <div className="home-media">
                   <Star size={18} fill="currentColor"/>
-                  <span>Media del club: <strong>{((resenas[0].nota + resenas[1].nota) / 2).toFixed(1)}/10</strong></span>
+                  <span>Media del club: <strong>{fmtNota((resenas[0].nota + resenas[1].nota) / 2)}</strong></span>
                 </div>
               )}
             </div>
