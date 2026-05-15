@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Film, Star, Calendar, Edit3, Check, Clock } from 'lucide-react'
+import { Film, Star, Calendar, Edit3, Check, Clock, Search, X, Clapperboard, User, ArrowLeft } from 'lucide-react'
 import './Home.css'
 
 function Countdown({ fechaLimite }) {
   const [diff, setDiff] = useState(null)
-
   useEffect(() => {
     const calc = () => {
       const ms = new Date(fechaLimite) - new Date()
@@ -21,7 +20,6 @@ function Countdown({ fechaLimite }) {
   }, [fechaLimite])
 
   if (!diff) return <span className="home-deadline-passed">¡Plazo cumplido!</span>
-
   return (
     <div className="home-countdown">
       <Clock size={13}/>
@@ -50,6 +48,158 @@ function StarRating({ value, onChange }) {
   )
 }
 
+function SearchPanel({ user, onClose, onActivated }) {
+  const [mode, setMode]         = useState('movie')
+  const [q, setQ]               = useState('')
+  const [results, setRes]       = useState([])
+  const [loading, setLoad]      = useState(false)
+  const [director, setDirector] = useState(null)
+  const [dirFilms, setDirFilms] = useState([])
+  const [loadingDir, setLoadDir]= useState(false)
+  const [saving, setSaving]     = useState(false)
+
+  const search = async () => {
+    if (!q.trim()) return
+    setLoad(true)
+    try {
+      const url = mode === 'director'
+        ? `/api/tmdb-search?q=${encodeURIComponent(q)}&type=person`
+        : `/api/tmdb-search?q=${encodeURIComponent(q)}`
+      const r = await fetch(url).then(r => r.json())
+      setRes(r.results || [])
+    } catch (e) { console.error(e) }
+    setLoad(false)
+  }
+
+  const selectDirector = async (person) => {
+    setDirector(person); setRes([])
+    setLoadDir(true)
+    try {
+      const r = await fetch(`/api/tmdb-search?id=${person.id}`).then(r => r.json())
+      setDirFilms(r.results || [])
+    } catch (e) { console.error(e) }
+    setLoadDir(false)
+  }
+
+  const activar = async (movie) => {
+    setSaving(true)
+    const d = new Date(); d.setDate(d.getDate() + 3)
+    await supabase.from('peliculas').update({ activa: false }).eq('activa', true)
+    await supabase.from('peliculas').insert({
+      tmdb_id: movie.id, titulo: movie.title,
+      titulo_original: movie.original_title,
+      poster: movie.poster_path,
+      anio: parseInt(movie.release_date?.slice(0, 4)),
+      descripcion: movie.overview,
+      fecha_limite: d.toISOString().slice(0, 10),
+      elegida_por: user.id, activa: true,
+    })
+    setSaving(false)
+    onActivated()
+    onClose()
+  }
+
+  const switchMode = (m) => {
+    setMode(m); setQ(''); setRes([])
+    setDirector(null); setDirFilms([])
+  }
+
+  const films = director ? dirFilms : results
+
+  return (
+    <div className="search-overlay">
+      <div className="search-panel">
+        {/* Handle */}
+        <div className="search-handle"/>
+
+        {/* Cabecera */}
+        <div className="search-panel-header">
+          <div className="search-panel-tabs">
+            <button className={`search-panel-tab ${mode === 'movie' ? 'active' : ''}`}
+              onClick={() => switchMode('movie')}>
+              <Film size={13}/> Película
+            </button>
+            <button className={`search-panel-tab ${mode === 'director' ? 'active' : ''}`}
+              onClick={() => switchMode('director')}>
+              <User size={13}/> Director
+            </button>
+          </div>
+          <button className="search-panel-close" onClick={onClose}><X size={20}/></button>
+        </div>
+
+        {/* Input */}
+        {!director && (
+          <div className="search-panel-bar">
+            <Search size={15} className="ms-icon"/>
+            <input
+              className="ms-input"
+              placeholder={mode === 'director' ? 'Buscar director…' : 'Buscar película…'}
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && search()}
+              autoFocus
+            />
+            {q && <button className="ms-clear" onClick={() => { setQ(''); setRes([]) }}><X size={14}/></button>}
+            <button className="ms-btn" onClick={search}>Buscar</button>
+          </div>
+        )}
+
+        {/* Volver a director */}
+        {director && (
+          <button className="search-back-btn" onClick={() => { setDirector(null); setDirFilms([]) }}>
+            <ArrowLeft size={14}/> {director.name}
+          </button>
+        )}
+
+        {/* Resultados */}
+        <div className="search-panel-results">
+          {(loading || loadingDir) && (
+            <div className="ms-loading"><span className="spinner"/> Buscando…</div>
+          )}
+
+          {!director && mode === 'director' && results.map(p => (
+            <div key={p.id} className="ms-result" onClick={() => selectDirector(p)}>
+              {p.profile_path
+                ? <img src={`https://image.tmdb.org/t/p/w92${p.profile_path}`} alt={p.name}/>
+                : <div className="ms-no-poster"><User size={16}/></div>
+              }
+              <div className="ms-result-info">
+                <p className="ms-result-title">{p.name}</p>
+                <p className="ms-result-year">{p.known_for_department}</p>
+              </div>
+              <ArrowLeft size={16} className="ms-add-icon" style={{ transform: 'rotate(180deg)' }}/>
+            </div>
+          ))}
+
+          {(mode === 'movie' || director) && films.map(m => (
+            <div key={m.id} className="ms-result" onClick={() => activar(m)}>
+              {m.poster_path
+                ? <img src={`https://image.tmdb.org/t/p/w92${m.poster_path}`} alt={m.title}/>
+                : <div className="ms-no-poster"><Clapperboard size={16}/></div>
+              }
+              <div className="ms-result-info">
+                <p className="ms-result-title">{m.title}</p>
+                <p className="ms-result-year">{m.release_date?.slice(0, 4)}</p>
+              </div>
+              {saving
+                ? <span className="spinner"/>
+                : <Check size={16} className="ms-add-icon"/>
+              }
+            </div>
+          ))}
+
+          {!loading && !loadingDir && films.length === 0 && !q && !director && (
+            <div className="search-panel-empty">
+              <Clapperboard size={36} strokeWidth={1}/>
+              <p>Busca para elegir la siguiente película</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Home({ user, profile, nombres }) {
   const [pelicula, setPelicula]   = useState(null)
   const [resenas, setResenas]     = useState([])
@@ -58,30 +208,23 @@ export default function Home({ user, profile, nombres }) {
   const [nota, setNota]           = useState(0)
   const [texto, setTexto]         = useState('')
   const [saving, setSaving]       = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
 
   const miResena = resenas.find(r => r.usuario_id === user.id)
   const otraResena = resenas.find(r => r.usuario_id !== user.id)
 
-  useEffect(() => {
-    loadPelicula()
-  }, [])
+  useEffect(() => { loadPelicula() }, [])
 
   const loadPelicula = async () => {
     setLoading(true)
     const { data: pel } = await supabase
-      .from('peliculas')
-      .select('*')
+      .from('peliculas').select('*')
       .eq('activa', true)
       .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-
+      .limit(1).single()
     if (pel) {
       setPelicula(pel)
-      const { data: res } = await supabase
-        .from('resenas')
-        .select('*')
-        .eq('pelicula_id', pel.id)
+      const { data: res } = await supabase.from('resenas').select('*').eq('pelicula_id', pel.id)
       setResenas(res || [])
     }
     setLoading(false)
@@ -91,141 +234,135 @@ export default function Home({ user, profile, nombres }) {
     e.preventDefault()
     if (!nota) return
     setSaving(true)
-    const row = {
-      pelicula_id: pelicula.id,
-      usuario_id: user.id,
-      nota,
-      texto: texto.trim() || null,
-    }
-    await supabase.from('resenas').upsert(row, { onConflict: 'pelicula_id,usuario_id' })
+    await supabase.from('resenas').upsert(
+      { pelicula_id: pelicula.id, usuario_id: user.id, nota, texto: texto.trim() || null },
+      { onConflict: 'pelicula_id,usuario_id' }
+    )
     await loadPelicula()
-    setShowForm(false); setNota(0); setTexto('')
-    setSaving(false)
+    setShowForm(false); setNota(0); setTexto(''); setSaving(false)
   }
 
-  if (loading) return (
-    <div className="home-loading">
-      <span className="spinner"/> Cargando…
-    </div>
-  )
-
-  if (!pelicula) return (
-    <div className="home-empty">
-      <Film size={48} strokeWidth={1}/>
-      <p>No hay ninguna película activa.</p>
-      <p className="home-empty-sub">Ve a Propuestas para elegir la siguiente.</p>
-    </div>
-  )
+  if (loading) return <div className="home-loading"><span className="spinner"/> Cargando…</div>
 
   const ambosResenaron = resenas.length >= 2
 
   return (
-    <div className="home-page">
-      {/* Cabecera */}
-      <div className="home-header">
-        <p className="home-label">🎬 Película del momento</p>
-        {pelicula.fecha_limite && (
-          <Countdown fechaLimite={pelicula.fecha_limite}/>
-        )}
-      </div>
-
-      {/* Card de la película */}
-      <div className="home-card">
-        {pelicula.poster && (
-          <img src={`https://image.tmdb.org/t/p/w342${pelicula.poster}`}
-            alt={pelicula.titulo} className="home-poster"/>
-        )}
-        <div className="home-card-info">
-          <h2 className="home-titulo">{pelicula.titulo}</h2>
-          {pelicula.titulo_original && pelicula.titulo_original !== pelicula.titulo && (
-            <p className="home-titulo-orig">{pelicula.titulo_original}</p>
-          )}
-          {pelicula.anio && <p className="home-anio">{pelicula.anio}</p>}
-          {pelicula.descripcion && (
-            <p className="home-descripcion">{pelicula.descripcion}</p>
-          )}
-          {pelicula.fecha_limite && (
-            <div className="home-deadline-row">
-              <Calendar size={13}/>
-              <span>Ver antes del {new Date(pelicula.fecha_limite).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</span>
+    <>
+      <div className="home-page" style={{ paddingBottom: '110px' }}>
+        {pelicula ? (
+          <>
+            <div className="home-header">
+              <p className="home-label">🎬 Película del momento</p>
+              {pelicula.fecha_limite && <Countdown fechaLimite={pelicula.fecha_limite}/>}
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* Reseñas */}
-      <div className="home-resenas">
-        <h3 className="home-resenas-title">Reseñas</h3>
+            <div className="home-card">
+              {pelicula.poster && (
+                <img src={`https://image.tmdb.org/t/p/w342${pelicula.poster}`}
+                  alt={pelicula.titulo} className="home-poster"/>
+              )}
+              <div className="home-card-info">
+                <h2 className="home-titulo">{pelicula.titulo}</h2>
+                {pelicula.titulo_original && pelicula.titulo_original !== pelicula.titulo && (
+                  <p className="home-titulo-orig">{pelicula.titulo_original}</p>
+                )}
+                {pelicula.anio && <p className="home-anio">{pelicula.anio}</p>}
+                {pelicula.descripcion && <p className="home-descripcion">{pelicula.descripcion}</p>}
+                {pelicula.fecha_limite && (
+                  <div className="home-deadline-row">
+                    <Calendar size={13}/>
+                    <span>Ver antes del {new Date(pelicula.fecha_limite).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</span>
+                  </div>
+                )}
+              </div>
+            </div>
 
-        {/* Mi reseña o formulario */}
-        {miResena ? (
-          <div className="home-resena-card mine">
-            <div className="home-resena-header">
-              <span className="home-resena-nombre">{profile?.nombre || 'Tú'}</span>
-              <span className="home-resena-nota">
-                <Star size={13} fill="currentColor"/> {miResena.nota}/10
-              </span>
+            <div className="home-resenas">
+              <h3 className="home-resenas-title">Reseñas</h3>
+
+              {miResena ? (
+                <div className="home-resena-card mine">
+                  <div className="home-resena-header">
+                    <span className="home-resena-nombre">{profile?.nombre || 'Tú'}</span>
+                    <span className="home-resena-nota">
+                      <Star size={13} fill="currentColor"/> {miResena.nota}/10
+                    </span>
+                  </div>
+                  {miResena.texto && <p className="home-resena-texto">{miResena.texto}</p>}
+                  <button className="home-edit-btn" onClick={() => {
+                    setNota(miResena.nota); setTexto(miResena.texto || ''); setShowForm(true)
+                  }}>
+                    <Edit3 size={13}/> Editar
+                  </button>
+                </div>
+              ) : showForm ? (
+                <form className="home-resena-form" onSubmit={handleSubmitResena}>
+                  <p className="home-form-label">Tu reseña de <strong>{pelicula.titulo}</strong></p>
+                  <StarRating value={nota} onChange={setNota}/>
+                  <textarea className="home-textarea"
+                    placeholder="¿Qué te pareció? (opcional)"
+                    value={texto} onChange={e => setTexto(e.target.value)} rows={4}/>
+                  <div className="home-form-actions">
+                    <button type="button" className="home-btn-cancel" onClick={() => setShowForm(false)}>Cancelar</button>
+                    <button type="submit" className="home-btn-submit" disabled={!nota || saving}>
+                      {saving ? <span className="spinner"/> : <Check size={15}/>}
+                      Guardar reseña
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <button className="home-add-resena" onClick={() => setShowForm(true)}>
+                  <Star size={16}/> Escribir mi reseña
+                </button>
+              )}
+
+              {otraResena ? (
+                <div className="home-resena-card">
+                  <div className="home-resena-header">
+                    <span className="home-resena-nombre">{nombres[otraResena.usuario_id] || 'El otro'}</span>
+                    <span className="home-resena-nota">
+                      <Star size={13} fill="currentColor"/> {otraResena.nota}/10
+                    </span>
+                  </div>
+                  {otraResena.texto && <p className="home-resena-texto">{otraResena.texto}</p>}
+                </div>
+              ) : (
+                <div className="home-resena-pending">
+                  Esperando la reseña de {nombres[Object.keys(nombres).find(k => k !== user.id)] || 'el otro'}…
+                </div>
+              )}
+
+              {ambosResenaron && (
+                <div className="home-media">
+                  <Star size={18} fill="currentColor"/>
+                  <span>Media del club: <strong>{((resenas[0].nota + resenas[1].nota) / 2).toFixed(1)}/10</strong></span>
+                </div>
+              )}
             </div>
-            {miResena.texto && <p className="home-resena-texto">{miResena.texto}</p>}
-            <button className="home-edit-btn" onClick={() => {
-              setNota(miResena.nota); setTexto(miResena.texto || ''); setShowForm(true)
-            }}>
-              <Edit3 size={13}/> Editar
-            </button>
-          </div>
-        ) : showForm ? (
-          <form className="home-resena-form" onSubmit={handleSubmitResena}>
-            <p className="home-form-label">Tu reseña de <strong>{pelicula.titulo}</strong></p>
-            <StarRating value={nota} onChange={setNota}/>
-            <textarea
-              className="home-textarea"
-              placeholder="¿Qué te pareció? (opcional)"
-              value={texto}
-              onChange={e => setTexto(e.target.value)}
-              rows={4}
-            />
-            <div className="home-form-actions">
-              <button type="button" className="home-btn-cancel" onClick={() => setShowForm(false)}>Cancelar</button>
-              <button type="submit" className="home-btn-submit" disabled={!nota || saving}>
-                {saving ? <span className="spinner"/> : <Check size={15}/>}
-                Guardar reseña
-              </button>
-            </div>
-          </form>
+          </>
         ) : (
-          <button className="home-add-resena" onClick={() => setShowForm(true)}>
-            <Star size={16}/> Escribir mi reseña
-          </button>
-        )}
-
-        {/* Reseña del otro */}
-        {otraResena ? (
-          <div className="home-resena-card other">
-            <div className="home-resena-header">
-              <span className="home-resena-nombre">{nombres[otraResena.usuario_id] || 'El otro'}</span>
-              <span className="home-resena-nota">
-                <Star size={13} fill="currentColor"/> {otraResena.nota}/10
-              </span>
-            </div>
-            {otraResena.texto && <p className="home-resena-texto">{otraResena.texto}</p>}
-          </div>
-        ) : (
-          <div className="home-resena-pending">
-            <span>{resenas.length === 0 || !miResena
-              ? (otraResena === undefined ? 'El otro aún no ha reseñado' : '')
-              : 'Esperando la reseña del otro…'
-            }</span>
-          </div>
-        )}
-
-        {/* Media si ambos reseñaron */}
-        {ambosResenaron && (
-          <div className="home-media">
-            <Star size={18} fill="currentColor"/>
-            <span>Media del club: <strong>{((resenas[0].nota + resenas[1].nota) / 2).toFixed(1)}/10</strong></span>
+          <div className="home-empty">
+            <Film size={48} strokeWidth={1}/>
+            <p>No hay ninguna película activa.</p>
+            <p className="home-empty-sub">Usa el buscador de abajo para elegir la primera.</p>
           </div>
         )}
       </div>
-    </div>
+
+      {/* Barra búsqueda fija */}
+      <div className="home-search-bar" onClick={() => setShowSearch(true)}>
+        <Search size={17} className="home-search-bar-icon"/>
+        <span>Buscar siguiente película…</span>
+      </div>
+
+      {/* Panel búsqueda */}
+      {showSearch && (
+        <SearchPanel
+          user={user}
+          onClose={() => setShowSearch(false)}
+          onActivated={loadPelicula}
+        />
+      )}
+    </>
   )
 }
