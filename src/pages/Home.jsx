@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { Film, Star, Edit3, Check, Search, X, Clapperboard, User, ArrowLeft, ChevronDown, Clock } from 'lucide-react'
 import './Home.css'
+import './Propuestas.css'
 
 function Countdown({ fechaLimite }) {
   const [diff, setDiff] = useState(null)
@@ -153,16 +154,16 @@ function SearchPanel({ user, onClose, onActivated }) {
   const films = director ? dirFilms : results
 
   return (
-    <>
     <div className="search-overlay">
       <div className="search-panel">
         <div className="search-handle"/>
-        <div className="search-panel-header">
-          <div className="search-panel-tabs">
-            <button className={`search-panel-tab ${mode === 'movie' ? 'active' : ''}`} onClick={() => switchMode('movie')}>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="prop-mode-tabs" style={{ marginBottom: 0, flex: 1 }}>
+            <button className={`prop-mode-tab ${mode === 'movie' ? 'active' : ''}`} onClick={() => switchMode('movie')}>
               <Film size={13}/> Película
             </button>
-            <button className={`search-panel-tab ${mode === 'director' ? 'active' : ''}`} onClick={() => switchMode('director')}>
+            <button className={`prop-mode-tab ${mode === 'director' ? 'active' : ''}`} onClick={() => switchMode('director')}>
               <User size={13}/> Director
             </button>
           </div>
@@ -170,7 +171,7 @@ function SearchPanel({ user, onClose, onActivated }) {
         </div>
 
         {!director && (
-          <div className="search-panel-bar">
+          <div className="movie-search-bar" style={{ marginBottom: 0 }}>
             <Search size={15} className="ms-icon"/>
             <input className="ms-input"
               placeholder={mode === 'director' ? 'Buscar director…' : 'Buscar película…'}
@@ -182,12 +183,12 @@ function SearchPanel({ user, onClose, onActivated }) {
         )}
 
         {director && (
-          <button className="search-back-btn" onClick={() => { setDirector(null); setDirFilms([]) }}>
+          <button className="prop-back-btn" style={{ paddingBottom: '4px' }} onClick={() => { setDirector(null); setDirFilms([]) }}>
             <ArrowLeft size={14}/> {director.name}
           </button>
         )}
 
-        <div className="search-panel-results">
+        <div className="ms-results" style={{ overflowY: 'auto', flex: 1 }}>
           {(loading || loadingDir) && <div className="ms-loading"><span className="spinner"/> Buscando…</div>}
 
           {!director && mode === 'director' && results.map(p => (
@@ -225,8 +226,6 @@ function SearchPanel({ user, onClose, onActivated }) {
         </div>
       </div>
     </div>
-
-    </>
   )
 }
 
