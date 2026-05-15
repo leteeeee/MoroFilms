@@ -247,9 +247,12 @@ export default function Home({ user, profile, nombres }) {
   const ambosResenaron = resenas.length >= 2
 
   // Turno: puedes recomendar si no hay peli activa,
-  // o si tú no la elegiste Y el plazo ya pasó
+  // o si tú no la elegiste Y el plazo ya pasó,
+  // o si tú la elegiste (puedes cambiarla)
   const plazoAcabado = !pelicula?.fecha_limite || new Date(pelicula.fecha_limite) <= new Date()
+  const yoElegí = pelicula?.elegida_por === user.id
   const esMiTurno = !pelicula || (pelicula.elegida_por !== user.id && plazoAcabado)
+  const puedoCambiar = yoElegí  // quien puso la peli puede cambiarla
   const otroNombre = nombres[Object.keys(nombres).find(k => k !== user.id)] || 'el otro'
 
   return (
@@ -356,16 +359,16 @@ export default function Home({ user, profile, nombres }) {
       </div>
 
       {/* Barra búsqueda fija */}
-      {esMiTurno ? (
+      {(esMiTurno || puedoCambiar) ? (
         <div className="home-search-bar" onClick={() => setShowSearch(true)}>
           <Search size={17} className="home-search-bar-icon"/>
-          <span>Buscar siguiente película…</span>
+          <span>{puedoCambiar && !esMiTurno ? 'Cambiar película…' : 'Buscar siguiente película…'}</span>
         </div>
       ) : (
         <div className="home-search-bar home-search-bar--disabled">
           <Clock size={17} className="home-search-bar-icon"/>
           <span>
-            {pelicula?.elegida_por === user.id && !plazoAcabado
+            {!plazoAcabado
               ? `Turno de ${otroNombre} cuando acabe el plazo`
               : `Es el turno de ${otroNombre}`
             }
