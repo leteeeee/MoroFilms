@@ -274,15 +274,15 @@ function SearchPanel({ user, onClose, onActivated }) {
 }
 
 export default function Home({ user, profile, nombres, avatares }) {
-  const [pelicula, setPelicula]     = useState(null)
-  const [resenas, setResenas]       = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [showForm, setShowForm]     = useState(false)
-  const [nota, setNota]             = useState(0)
-  const [texto, setTexto]           = useState('')
-  const [saving, setSaving]         = useState(false)
-  const [showSearch, setShowSearch] = useState(false)
-  const [showDetail, setShowDetail] = useState(false)
+  const [pelicula, setPelicula]         = useState(null)
+  const [resenas, setResenas]           = useState([])
+  const [ultimaElegidaPor, setUltima]   = useState(null) // elegida_por de la última peli archivada
+  const [loading, setLoading]           = useState(true)
+  const [nota, setNota]                 = useState(0)
+  const [texto, setTexto]               = useState('')
+  const [saving, setSaving]             = useState(false)
+  const [showSearch, setShowSearch]     = useState(false)
+  const [showDetail, setShowDetail]     = useState(false)
   const [showResenaPanel, setShowResenaPanel] = useState(false)
 
   const miResena   = resenas.find(r => r.usuario_id === user.id)
@@ -300,6 +300,11 @@ export default function Home({ user, profile, nombres, avatares }) {
       setResenas(res || [])
     } else {
       setPelicula(null)
+      setResenas([])
+      // Saber quién eligió la última para calcular turno
+      const { data: ultima } = await supabase.from('peliculas').select('elegida_por')
+        .eq('activa', false).order('created_at', { ascending: false }).limit(1).single()
+      setUltima(ultima?.elegida_por || null)
     }
     setLoading(false)
   }
@@ -312,18 +317,25 @@ export default function Home({ user, profile, nombres, avatares }) {
       { pelicula_id: pelicula.id, usuario_id: user.id, nota, texto: texto.trim() || null },
       { onConflict: 'pelicula_id,usuario_id' }
     )
+    // Si tras guardar ambos han reseñado → archivar la peli
+    const { data: todasRes } = await supabase.from('resenas').select('id').eq('pelicula_id', pelicula.id)
+    if (todasRes && todasRes.length >= 2) {
+      await supabase.from('peliculas').update({ activa: false }).eq('id', pelicula.id)
+    }
     await loadPelicula()
-    setShowForm(false); setNota(0); setTexto(''); setSaving(false)
+    setShowResenaPanel(false); setNota(0); setTexto(''); setSaving(false)
   }
 
   if (loading) return <div className="home-loading"><span className="spinner"/> Cargando…</div>
 
   const ambosResenaron = resenas.length >= 2
-  const plazoAcabado = !pelicula?.fecha_limite || new Date(pelicula.fecha_limite) <= new Date()
   const yoElegí = pelicula?.elegida_por === user.id
-  const esMiTurno = !pelicula || (pelicula.elegida_por !== user.id && plazoAcabado)
-  const puedoCambiar = yoElegí
   const otroNombre = nombres[Object.keys(nombres).find(k => k !== user.id)] || 'el otro'
+
+  // Turno: puedo elegir si no hay peli activa y yo no elegí la última,
+  // o si hay peli activa y la elegí yo (para cambiarla)
+  const esMiTurno = !pelicula && ultimaElegidaPor !== user.id
+  const puedoCambiar = !!pelicula && yoElegí
 
   return (
     <>
@@ -428,8 +440,8 @@ export default function Home({ user, profile, nombres, avatares }) {
         <div className="home-search-bar home-search-bar--disabled">
           <Clock size={17} className="home-search-bar-icon"/>
           <span>
-            {!plazoAcabado && !yoElegí
-              ? 'Tu turno cuando acabe el plazo'
+            {pelicula
+              ? `Reseñad los dos para cambiar de turno`
               : `Es el turno de ${otroNombre}`}
           </span>
         </div>
