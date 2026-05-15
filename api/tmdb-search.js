@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   try {
     // Películas de un director por su ID
     if (id) {
-      const url = `https://api.themoviedb.org/3/person/${id}/movie_credits`
+      const url = `https://api.themoviedb.org/3/person/${id}/movie_credits?language=es-ES`
       const data = await fetch(url, {
         headers: { Authorization: `Bearer ${key}` }
       }).then(r => r.json())
