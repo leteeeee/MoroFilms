@@ -129,6 +129,18 @@
 }
 .prop-delete-btn:hover { color: var(--red); }
 
+/* Grid días */
+.dia-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+}
+.dia-btn {
+  padding: 10px 4px; border-radius: 4px;
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--gray); font-size: 0.75rem; font-weight: 600;
+  transition: all 0.15s;
+}
+.dia-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+
 /* Modal */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.8);

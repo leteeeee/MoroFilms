@@ -85,6 +85,19 @@ function MovieDetail({ pelicula, onClose }) {
   )
 }
 
+const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
+
+function nextWeekday(dayIndex) {
+  // dayIndex: 0=Lunes … 6=Domingo
+  const today = new Date()
+  const todayIdx = (today.getDay() + 6) % 7 // convierte domingo=0 a domingo=6
+  let diff = dayIndex - todayIdx
+  if (diff <= 0) diff += 7
+  const d = new Date(today)
+  d.setDate(today.getDate() + diff)
+  return d.toISOString().slice(0, 10)
+}
+
 function SearchPanel({ user, onClose, onActivated }) {
   const [mode, setMode]         = useState('movie')
   const [q, setQ]               = useState('')
@@ -94,6 +107,8 @@ function SearchPanel({ user, onClose, onActivated }) {
   const [dirFilms, setDirFilms] = useState([])
   const [loadingDir, setLoadDir]= useState(false)
   const [saving, setSaving]     = useState(false)
+  const [selected, setSelected] = useState(null)  // película pendiente de confirmar día
+  const [diaIdx, setDiaIdx]     = useState(null)  // índice del día elegido
 
   const search = async () => {
     if (!q.trim()) return
@@ -118,20 +133,18 @@ function SearchPanel({ user, onClose, onActivated }) {
     setLoadDir(false)
   }
 
-  const activar = async (movie) => {
+  const confirmarDia = async () => {
+    if (diaIdx === null || !selected) return
     setSaving(true)
-    const d = new Date(); d.setDate(d.getDate() + 3)
 
-    // Buscar director de la película
     let directorNombre = director?.name || null
     if (!directorNombre) {
       try {
-        const cr = await fetch(`/api/tmdb-search?q=${movie.id}&type=credits`).then(r => r.json())
+        const cr = await fetch(`/api/tmdb-search?q=${selected.id}&type=credits`).then(r => r.json())
         directorNombre = cr.director || null
       } catch {}
     }
 
-    // Si la peli activa no tiene reseñas, borrarla
     const { data: pelActiva } = await supabase.from('peliculas').select('id').eq('activa', true).single()
     if (pelActiva) {
       const { data: resenas } = await supabase.from('resenas').select('id').eq('pelicula_id', pelActiva.id)
@@ -143,13 +156,13 @@ function SearchPanel({ user, onClose, onActivated }) {
     }
 
     await supabase.from('peliculas').insert({
-      tmdb_id: movie.id, titulo: movie.title,
-      titulo_original: movie.original_title,
-      poster: movie.poster_path,
-      anio: parseInt(movie.release_date?.slice(0, 4)),
-      descripcion: movie.overview,
+      tmdb_id: selected.id, titulo: selected.title,
+      titulo_original: selected.original_title,
+      poster: selected.poster_path,
+      anio: parseInt(selected.release_date?.slice(0, 4)),
+      descripcion: selected.overview,
       director: directorNombre,
-      fecha_limite: d.toISOString().slice(0, 10),
+      fecha_limite: nextWeekday(diaIdx),
       elegida_por: user.id, activa: true,
     })
     setSaving(false)
@@ -211,7 +224,7 @@ function SearchPanel({ user, onClose, onActivated }) {
           ))}
 
           {(mode === 'movie' || director) && films.map(m => (
-            <div key={m.id} className="ms-result" onClick={() => !saving && activar(m)}>
+            <div key={m.id} className="ms-result" onClick={() => { setSelected(m); setDiaIdx(null) }}>
               {m.poster_path
                 ? <img src={`https://image.tmdb.org/t/p/w92${m.poster_path}`} alt={m.title}/>
                 : <div className="ms-no-poster"><Clapperboard size={16}/></div>}
@@ -219,7 +232,7 @@ function SearchPanel({ user, onClose, onActivated }) {
                 <p className="ms-result-title">{m.title}</p>
                 <p className="ms-result-year">{m.release_date?.slice(0, 4)}</p>
               </div>
-              {saving ? <span className="spinner"/> : <Check size={16} className="ms-add-icon"/>}
+              <Film size={16} className="ms-add-icon"/>
             </div>
           ))}
 
@@ -231,6 +244,31 @@ function SearchPanel({ user, onClose, onActivated }) {
           )}
         </div>
       </div>
+
+      {/* Modal elegir día */}
+      {selected && (
+        <div className="modal-overlay" onClick={() => setSelected(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>¿Cuándo la veis? <em>{selected.title}</em></h3>
+            <div className="dia-grid">
+              {DIAS.map((dia, i) => (
+                <button key={i}
+                  className={`dia-btn ${diaIdx === i ? 'active' : ''}`}
+                  onClick={() => setDiaIdx(i)}>
+                  {dia}
+                </button>
+              ))}
+            </div>
+            <div className="modal-actions">
+              <button className="modal-cancel" onClick={() => setSelected(null)}>Cancelar</button>
+              <button className="modal-confirm" onClick={confirmarDia} disabled={diaIdx === null || saving}>
+                {saving ? <span className="spinner"/> : <Check size={15}/>}
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
