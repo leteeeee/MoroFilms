@@ -31,40 +31,38 @@
 /* Card hero película */
 .home-card-hero {
   position: relative; border-radius: 8px; overflow: hidden;
-  margin: 0 auto 20px;
+  margin-bottom: 20px; cursor: pointer;
   box-shadow: 0 8px 32px rgba(0,0,0,.6);
-  cursor: pointer;
-  width: 180px;
-  aspect-ratio: 2/3;
+  width: 100%; height: 300px;
 }
 .home-hero-poster {
-  width: 100%; height: 100%; object-fit: cover; display: block;
+  width: 100%; height: 100%; object-fit: cover; object-position: center 20%; display: block;
 }
 .home-hero-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(13,10,10,.97) 0%, rgba(13,10,10,.5) 50%, transparent 100%);
+  background: linear-gradient(to top, rgba(13,10,10,.95) 0%, rgba(13,10,10,.3) 55%, transparent 100%);
   display: flex; flex-direction: column; justify-content: flex-end;
-  padding: 20px 16px 16px;
+  padding: 14px 14px 12px;
 }
 .home-hero-label {
   display: flex; align-items: center; justify-content: space-between;
-  font-size: 0.62rem; font-weight: 700; letter-spacing: 1.5px;
-  color: var(--red); text-transform: uppercase; margin-bottom: 8px;
+  font-size: 0.58rem; font-weight: 700; letter-spacing: 1.5px;
+  color: var(--red); text-transform: uppercase; margin-bottom: 5px;
 }
 .home-hero-titulo {
   font-family: var(--serif);
-  font-size: 1.6rem; font-weight: 800; color: var(--cream);
-  line-height: 1.15; margin: 0 0 6px;
+  font-size: 1.25rem; font-weight: 800; color: var(--cream);
+  line-height: 1.15; margin: 0 0 4px;
 }
 .home-hero-meta {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 0.75rem; color: var(--gray); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.68rem; color: var(--gray); margin-bottom: 6px;
 }
 .home-hero-dot { color: var(--border); }
 .home-hero-hint {
   display: flex; align-items: center; gap: 4px;
-  font-size: 0.68rem; color: rgba(245,239,224,.4);
-  letter-spacing: 0.5px;
+  font-size: 0.62rem; color: rgba(245,239,224,.35);
+  letter-spacing: 0.3px;
 }
 
 /* Panel detalle */

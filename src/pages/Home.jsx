@@ -292,7 +292,7 @@ export default function Home({ user, profile, nombres }) {
       <div className="home-page" style={{ paddingBottom: '110px' }}>
         {pelicula ? (
           <>
-            {/* Card principal — clicable para ver detalles */}
+            {/* Card principal */}
             <div className="home-card-hero" onClick={() => setShowDetail(true)}>
               {pelicula.poster && (
                 <img src={`https://image.tmdb.org/t/p/w500${pelicula.poster}`}
@@ -309,7 +309,7 @@ export default function Home({ user, profile, nombres }) {
                   {pelicula.director && <><span className="home-hero-dot">·</span><span>{pelicula.director}</span></>}
                 </div>
                 <div className="home-hero-hint">
-                  <ChevronDown size={14}/> Ver detalles
+                  <ChevronDown size={12}/> Ver sinopsis
                 </div>
               </div>
             </div>
