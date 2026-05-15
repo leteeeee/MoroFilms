@@ -33,7 +33,7 @@
   position: relative; border-radius: 8px; overflow: hidden;
   margin-bottom: 20px; cursor: pointer;
   box-shadow: 0 8px 32px rgba(0,0,0,.6);
-  width: 100%; height: 240px;
+  width: 100%; height: 320px;
 }
 .home-hero-poster {
   width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block;
