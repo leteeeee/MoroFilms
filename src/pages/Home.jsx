@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Film, Star, Calendar, Edit3, Check, Clock, Search, X, Clapperboard, User, ArrowLeft } from 'lucide-react'
+import { Film, Star, Edit3, Check, Clock, Search, X, Clapperboard, User, ArrowLeft, Calendar, ChevronDown } from 'lucide-react'
 import './Home.css'
 
 function Countdown({ fechaLimite }) {
@@ -37,13 +37,50 @@ function StarRating({ value, onChange }) {
       {stars.map(v => (
         <button key={v} type="button"
           className={`star-btn ${(hov || value) >= v ? 'active' : ''}`}
-          onMouseEnter={() => setHov(v)}
-          onMouseLeave={() => setHov(0)}
+          onMouseEnter={() => setHov(v)} onMouseLeave={() => setHov(0)}
           onClick={() => onChange(v)}>
           <Star size={22} fill={(hov || value) >= v ? 'currentColor' : 'none'} strokeWidth={1.5}/>
         </button>
       ))}
       {value > 0 && <span className="star-label">{value}/10</span>}
+    </div>
+  )
+}
+
+function MovieDetail({ pelicula, onClose }) {
+  return (
+    <div className="detail-overlay" onClick={onClose}>
+      <div className="detail-panel" onClick={e => e.stopPropagation()}>
+        <div className="detail-handle"/>
+        <div className="detail-content">
+          {pelicula.poster && (
+            <img src={`https://image.tmdb.org/t/p/w342${pelicula.poster}`}
+              alt={pelicula.titulo} className="detail-poster"/>
+          )}
+          <div className="detail-info">
+            <h2 className="detail-titulo">{pelicula.titulo}</h2>
+            {pelicula.titulo_original && pelicula.titulo_original !== pelicula.titulo && (
+              <p className="detail-titulo-orig">{pelicula.titulo_original}</p>
+            )}
+            <div className="detail-meta">
+              {pelicula.anio && <span className="detail-anio">{pelicula.anio}</span>}
+              {pelicula.director && <span className="detail-director">Dir. {pelicula.director}</span>}
+            </div>
+            {pelicula.fecha_limite && (
+              <div className="detail-deadline">
+                <Calendar size={13}/>
+                <span>Ver antes del {new Date(pelicula.fecha_limite).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</span>
+              </div>
+            )}
+            {pelicula.descripcion && (
+              <p className="detail-sinopsis">{pelicula.descripcion}</p>
+            )}
+          </div>
+        </div>
+        <button className="detail-close" onClick={onClose}>
+          <ChevronDown size={20}/> Cerrar
+        </button>
+      </div>
     </div>
   )
 }
@@ -85,12 +122,19 @@ function SearchPanel({ user, onClose, onActivated }) {
     setSaving(true)
     const d = new Date(); d.setDate(d.getDate() + 3)
 
-    // Si la peli activa no tiene reseñas, borrarla en lugar de archivarla
-    const { data: pelActiva } = await supabase
-      .from('peliculas').select('id').eq('activa', true).single()
+    // Buscar director de la película
+    let directorNombre = director?.name || null
+    if (!directorNombre) {
+      try {
+        const cr = await fetch(`/api/tmdb-search?q=${movie.id}&type=credits`).then(r => r.json())
+        directorNombre = cr.director || null
+      } catch {}
+    }
+
+    // Si la peli activa no tiene reseñas, borrarla
+    const { data: pelActiva } = await supabase.from('peliculas').select('id').eq('activa', true).single()
     if (pelActiva) {
-      const { data: resenas } = await supabase
-        .from('resenas').select('id').eq('pelicula_id', pelActiva.id)
+      const { data: resenas } = await supabase.from('resenas').select('id').eq('pelicula_id', pelActiva.id)
       if (resenas?.length === 0) {
         await supabase.from('peliculas').delete().eq('id', pelActiva.id)
       } else {
@@ -104,6 +148,7 @@ function SearchPanel({ user, onClose, onActivated }) {
       poster: movie.poster_path,
       anio: parseInt(movie.release_date?.slice(0, 4)),
       descripcion: movie.overview,
+      director: directorNombre,
       fecha_limite: d.toISOString().slice(0, 10),
       elegida_por: user.id, activa: true,
     })
@@ -112,70 +157,51 @@ function SearchPanel({ user, onClose, onActivated }) {
     onClose()
   }
 
-  const switchMode = (m) => {
-    setMode(m); setQ(''); setRes([])
-    setDirector(null); setDirFilms([])
-  }
-
+  const switchMode = (m) => { setMode(m); setQ(''); setRes([]); setDirector(null); setDirFilms([]) }
   const films = director ? dirFilms : results
 
   return (
     <div className="search-overlay">
       <div className="search-panel">
-        {/* Handle */}
         <div className="search-handle"/>
-
-        {/* Cabecera */}
         <div className="search-panel-header">
           <div className="search-panel-tabs">
-            <button className={`search-panel-tab ${mode === 'movie' ? 'active' : ''}`}
-              onClick={() => switchMode('movie')}>
+            <button className={`search-panel-tab ${mode === 'movie' ? 'active' : ''}`} onClick={() => switchMode('movie')}>
               <Film size={13}/> Película
             </button>
-            <button className={`search-panel-tab ${mode === 'director' ? 'active' : ''}`}
-              onClick={() => switchMode('director')}>
+            <button className={`search-panel-tab ${mode === 'director' ? 'active' : ''}`} onClick={() => switchMode('director')}>
               <User size={13}/> Director
             </button>
           </div>
           <button className="search-panel-close" onClick={onClose}><X size={20}/></button>
         </div>
 
-        {/* Input */}
         {!director && (
           <div className="search-panel-bar">
             <Search size={15} className="ms-icon"/>
-            <input
-              className="ms-input"
+            <input className="ms-input"
               placeholder={mode === 'director' ? 'Buscar director…' : 'Buscar película…'}
-              value={q}
-              onChange={e => setQ(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && search()}
-              autoFocus
-            />
+              value={q} onChange={e => setQ(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && search()} autoFocus/>
             {q && <button className="ms-clear" onClick={() => { setQ(''); setRes([]) }}><X size={14}/></button>}
             <button className="ms-btn" onClick={search}>Buscar</button>
           </div>
         )}
 
-        {/* Volver a director */}
         {director && (
           <button className="search-back-btn" onClick={() => { setDirector(null); setDirFilms([]) }}>
             <ArrowLeft size={14}/> {director.name}
           </button>
         )}
 
-        {/* Resultados */}
         <div className="search-panel-results">
-          {(loading || loadingDir) && (
-            <div className="ms-loading"><span className="spinner"/> Buscando…</div>
-          )}
+          {(loading || loadingDir) && <div className="ms-loading"><span className="spinner"/> Buscando…</div>}
 
           {!director && mode === 'director' && results.map(p => (
             <div key={p.id} className="ms-result" onClick={() => selectDirector(p)}>
               {p.profile_path
                 ? <img src={`https://image.tmdb.org/t/p/w92${p.profile_path}`} alt={p.name}/>
-                : <div className="ms-no-poster"><User size={16}/></div>
-              }
+                : <div className="ms-no-poster"><User size={16}/></div>}
               <div className="ms-result-info">
                 <p className="ms-result-title">{p.name}</p>
                 <p className="ms-result-year">{p.known_for_department}</p>
@@ -185,19 +211,15 @@ function SearchPanel({ user, onClose, onActivated }) {
           ))}
 
           {(mode === 'movie' || director) && films.map(m => (
-            <div key={m.id} className="ms-result" onClick={() => activar(m)}>
+            <div key={m.id} className="ms-result" onClick={() => !saving && activar(m)}>
               {m.poster_path
                 ? <img src={`https://image.tmdb.org/t/p/w92${m.poster_path}`} alt={m.title}/>
-                : <div className="ms-no-poster"><Clapperboard size={16}/></div>
-              }
+                : <div className="ms-no-poster"><Clapperboard size={16}/></div>}
               <div className="ms-result-info">
                 <p className="ms-result-title">{m.title}</p>
                 <p className="ms-result-year">{m.release_date?.slice(0, 4)}</p>
               </div>
-              {saving
-                ? <span className="spinner"/>
-                : <Check size={16} className="ms-add-icon"/>
-              }
+              {saving ? <span className="spinner"/> : <Check size={16} className="ms-add-icon"/>}
             </div>
           ))}
 
@@ -214,14 +236,15 @@ function SearchPanel({ user, onClose, onActivated }) {
 }
 
 export default function Home({ user, profile, nombres }) {
-  const [pelicula, setPelicula]   = useState(null)
-  const [resenas, setResenas]     = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [showForm, setShowForm]   = useState(false)
-  const [nota, setNota]           = useState(0)
-  const [texto, setTexto]         = useState('')
-  const [saving, setSaving]       = useState(false)
+  const [pelicula, setPelicula]     = useState(null)
+  const [resenas, setResenas]       = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [showForm, setShowForm]     = useState(false)
+  const [nota, setNota]             = useState(0)
+  const [texto, setTexto]           = useState('')
+  const [saving, setSaving]         = useState(false)
   const [showSearch, setShowSearch] = useState(false)
+  const [showDetail, setShowDetail] = useState(false)
 
   const miResena   = resenas.find(r => r.usuario_id === user.id)
   const otraResena = resenas.find(r => r.usuario_id !== user.id)
@@ -230,15 +253,14 @@ export default function Home({ user, profile, nombres }) {
 
   const loadPelicula = async () => {
     setLoading(true)
-    const { data: pel } = await supabase
-      .from('peliculas').select('*')
-      .eq('activa', true)
-      .order('created_at', { ascending: false })
-      .limit(1).single()
+    const { data: pel } = await supabase.from('peliculas').select('*')
+      .eq('activa', true).order('created_at', { ascending: false }).limit(1).single()
     if (pel) {
       setPelicula(pel)
       const { data: res } = await supabase.from('resenas').select('*').eq('pelicula_id', pel.id)
       setResenas(res || [])
+    } else {
+      setPelicula(null)
     }
     setLoading(false)
   }
@@ -258,14 +280,10 @@ export default function Home({ user, profile, nombres }) {
   if (loading) return <div className="home-loading"><span className="spinner"/> Cargando…</div>
 
   const ambosResenaron = resenas.length >= 2
-
-  // Turno: puedes recomendar si no hay peli activa,
-  // o si tú no la elegiste Y el plazo ya pasó,
-  // o si tú la elegiste (puedes cambiarla)
   const plazoAcabado = !pelicula?.fecha_limite || new Date(pelicula.fecha_limite) <= new Date()
   const yoElegí = pelicula?.elegida_por === user.id
   const esMiTurno = !pelicula || (pelicula.elegida_por !== user.id && plazoAcabado)
-  const puedoCambiar = yoElegí  // quien puso la peli puede cambiarla
+  const puedoCambiar = yoElegí
   const otroNombre = nombres[Object.keys(nombres).find(k => k !== user.id)] || 'el otro'
 
   return (
@@ -273,32 +291,29 @@ export default function Home({ user, profile, nombres }) {
       <div className="home-page" style={{ paddingBottom: '110px' }}>
         {pelicula ? (
           <>
-            <div className="home-header">
-              <p className="home-label">🎬 Película del momento</p>
-              {pelicula.fecha_limite && <Countdown fechaLimite={pelicula.fecha_limite}/>}
-            </div>
-
-            <div className="home-card">
+            {/* Card principal — clicable para ver detalles */}
+            <div className="home-card-hero" onClick={() => setShowDetail(true)}>
               {pelicula.poster && (
-                <img src={`https://image.tmdb.org/t/p/w342${pelicula.poster}`}
-                  alt={pelicula.titulo} className="home-poster"/>
+                <img src={`https://image.tmdb.org/t/p/w500${pelicula.poster}`}
+                  alt={pelicula.titulo} className="home-hero-poster"/>
               )}
-              <div className="home-card-info">
-                <h2 className="home-titulo">{pelicula.titulo}</h2>
-                {pelicula.titulo_original && pelicula.titulo_original !== pelicula.titulo && (
-                  <p className="home-titulo-orig">{pelicula.titulo_original}</p>
-                )}
-                {pelicula.anio && <p className="home-anio">{pelicula.anio}</p>}
-                {pelicula.descripcion && <p className="home-descripcion">{pelicula.descripcion}</p>}
-                {pelicula.fecha_limite && (
-                  <div className="home-deadline-row">
-                    <Calendar size={13}/>
-                    <span>Ver antes del {new Date(pelicula.fecha_limite).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</span>
-                  </div>
-                )}
+              <div className="home-hero-overlay">
+                <div className="home-hero-label">
+                  <span>EN CARTELERA</span>
+                  {pelicula.fecha_limite && <Countdown fechaLimite={pelicula.fecha_limite}/>}
+                </div>
+                <h2 className="home-hero-titulo">{pelicula.titulo}</h2>
+                <div className="home-hero-meta">
+                  {pelicula.anio && <span>{pelicula.anio}</span>}
+                  {pelicula.director && <><span className="home-hero-dot">·</span><span>{pelicula.director}</span></>}
+                </div>
+                <div className="home-hero-hint">
+                  <ChevronDown size={14}/> Ver detalles
+                </div>
               </div>
             </div>
 
+            {/* Reseñas */}
             <div className="home-resenas">
               <h3 className="home-resenas-title">Reseñas</h3>
 
@@ -306,9 +321,7 @@ export default function Home({ user, profile, nombres }) {
                 <div className="home-resena-card mine">
                   <div className="home-resena-header">
                     <span className="home-resena-nombre">{profile?.nombre || 'Tú'}</span>
-                    <span className="home-resena-nota">
-                      <Star size={13} fill="currentColor"/> {miResena.nota}/10
-                    </span>
+                    <span className="home-resena-nota"><Star size={13} fill="currentColor"/> {miResena.nota}/10</span>
                   </div>
                   {miResena.texto && <p className="home-resena-texto">{miResena.texto}</p>}
                   <button className="home-edit-btn" onClick={() => {
@@ -342,15 +355,13 @@ export default function Home({ user, profile, nombres }) {
                 <div className="home-resena-card">
                   <div className="home-resena-header">
                     <span className="home-resena-nombre">{nombres[otraResena.usuario_id] || 'El otro'}</span>
-                    <span className="home-resena-nota">
-                      <Star size={13} fill="currentColor"/> {otraResena.nota}/10
-                    </span>
+                    <span className="home-resena-nota"><Star size={13} fill="currentColor"/> {otraResena.nota}/10</span>
                   </div>
                   {otraResena.texto && <p className="home-resena-texto">{otraResena.texto}</p>}
                 </div>
               ) : (
                 <div className="home-resena-pending">
-                  Esperando la reseña de {nombres[Object.keys(nombres).find(k => k !== user.id)] || 'el otro'}…
+                  Esperando la reseña de {otroNombre}…
                 </div>
               )}
 
@@ -383,19 +394,17 @@ export default function Home({ user, profile, nombres }) {
           <span>
             {!plazoAcabado
               ? `Turno de ${otroNombre} cuando acabe el plazo`
-              : `Es el turno de ${otroNombre}`
-            }
+              : `Es el turno de ${otroNombre}`}
           </span>
         </div>
       )}
 
-      {/* Panel búsqueda */}
       {showSearch && (
-        <SearchPanel
-          user={user}
-          onClose={() => setShowSearch(false)}
-          onActivated={loadPelicula}
-        />
+        <SearchPanel user={user} onClose={() => setShowSearch(false)} onActivated={loadPelicula}/>
+      )}
+
+      {showDetail && pelicula && (
+        <MovieDetail pelicula={pelicula} onClose={() => setShowDetail(false)}/>
       )}
     </>
   )

@@ -28,6 +28,14 @@ export default async function handler(req, res) {
       return res.status(200).json({ results: directors })
     }
 
+    // Créditos de película (para sacar director)
+    if (type === 'credits') {
+      const url = `https://api.themoviedb.org/3/movie/${q}/credits`
+      const data = await fetch(url, { headers: { Authorization: `Bearer ${key}` } }).then(r => r.json())
+      const director = (data.crew || []).find(c => c.job === 'Director')
+      return res.status(200).json({ director: director?.name || null })
+    }
+
     // Búsqueda de película (por defecto)
     const url = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(q)}&language=es-ES&page=1`
     const data = await fetch(url, {

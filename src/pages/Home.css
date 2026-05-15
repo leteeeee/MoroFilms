@@ -28,47 +28,94 @@
 }
 .home-deadline-passed { font-size: 0.75rem; color: var(--red); font-weight: 700; }
 
-/* Card película */
-.home-card {
-  display: flex; gap: 16px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  overflow: hidden; padding: 16px;
-  margin-bottom: 28px;
-  position: relative;
+/* Card hero película */
+.home-card-hero {
+  position: relative; border-radius: 8px; overflow: hidden;
+  margin-bottom: 24px; cursor: pointer;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6);
+  aspect-ratio: 2/3; max-height: 420px;
 }
-/* Borde rojo izquierdo tipo cartelera */
-.home-card::before {
-  content: '';
-  position: absolute; left: 0; top: 0; bottom: 0;
-  width: 3px; background: var(--red);
+.home-hero-poster {
+  width: 100%; height: 100%; object-fit: cover; display: block;
 }
-.home-poster {
-  width: 100px; flex-shrink: 0; border-radius: 2px;
-  object-fit: cover; align-self: flex-start;
-  box-shadow: 4px 4px 16px rgba(0,0,0,.5);
+.home-hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(13,10,10,.97) 0%, rgba(13,10,10,.5) 50%, transparent 100%);
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 20px 16px 16px;
 }
-.home-card-info { flex: 1; min-width: 0; }
-.home-titulo {
+.home-hero-label {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 1.5px;
+  color: var(--red); text-transform: uppercase; margin-bottom: 8px;
+}
+.home-hero-titulo {
   font-family: var(--serif);
-  font-size: 1.15rem; font-weight: 700; color: var(--cream);
+  font-size: 1.6rem; font-weight: 800; color: var(--cream);
+  line-height: 1.15; margin: 0 0 6px;
+}
+.home-hero-meta {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.75rem; color: var(--gray); margin-bottom: 10px;
+}
+.home-hero-dot { color: var(--border); }
+.home-hero-hint {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 0.68rem; color: rgba(245,239,224,.4);
+  letter-spacing: 0.5px;
+}
+
+/* Panel detalle */
+.detail-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  z-index: 150; display: flex; align-items: flex-end;
+}
+.detail-panel {
+  width: 100%; background: var(--card2);
+  border-top: 2px solid var(--red);
+  border-radius: 16px 16px 0 0;
+  padding: 12px 16px calc(env(safe-area-inset-bottom) + 16px);
+  max-height: 85vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.detail-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--border); margin: 0 auto 4px;
+}
+.detail-content {
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.detail-poster {
+  width: 90px; flex-shrink: 0; border-radius: 4px;
+  object-fit: cover; box-shadow: 4px 4px 16px rgba(0,0,0,.5);
+}
+.detail-info { flex: 1; min-width: 0; }
+.detail-titulo {
+  font-family: var(--serif);
+  font-size: 1.15rem; font-weight: 800; color: var(--cream);
   margin: 0 0 3px; line-height: 1.2;
 }
-.home-titulo-orig { font-size: 0.75rem; color: var(--gray); margin: 0 0 4px; font-style: italic; }
-.home-anio {
-  font-size: 0.72rem; color: var(--red); font-weight: 700;
-  letter-spacing: 1px; margin: 0 0 8px;
+.detail-titulo-orig { font-size: 0.72rem; color: var(--gray); font-style: italic; margin-bottom: 8px; }
+.detail-meta {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
 }
-.home-descripcion {
-  font-size: 0.78rem; color: var(--gray); line-height: 1.6;
-  margin: 0 0 8px;
-  display: -webkit-box; -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical; overflow: hidden;
+.detail-anio {
+  font-size: 0.68rem; color: var(--red); font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
 }
-.home-deadline-row {
+.detail-director { font-size: 0.72rem; color: var(--gray); }
+.detail-deadline {
   display: flex; align-items: center; gap: 5px;
-  font-size: 0.72rem; color: var(--gold);
+  font-size: 0.72rem; color: var(--gold); margin-bottom: 10px;
+}
+.detail-sinopsis {
+  font-size: 0.82rem; color: var(--gray); line-height: 1.7;
+}
+.detail-close {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: none; border: 1px solid var(--border); border-radius: 4px;
+  color: var(--gray); font-size: 0.78rem; padding: 12px;
+  width: 100%; transition: color 0.15s;
 }
 
 /* Sección reseñas */
