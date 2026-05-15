@@ -1,9 +1,10 @@
-import { Home, BookOpen } from 'lucide-react'
+import { Home, BookOpen, UserCircle } from 'lucide-react'
 import './BottomNav.css'
 
 const TABS = [
-  { id: 'home',      label: 'Inicio',    Icon: Home     },
-  { id: 'historial', label: 'Historial', Icon: BookOpen },
+  { id: 'home',      label: 'Inicio',    Icon: Home       },
+  { id: 'historial', label: 'Historial', Icon: BookOpen   },
+  { id: 'perfil',    label: 'Perfil',    Icon: UserCircle },
 ]
 
 export default function BottomNav({ page, setPage }) {

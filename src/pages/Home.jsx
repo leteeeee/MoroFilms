@@ -235,7 +235,7 @@ function SearchPanel({ user, onClose, onActivated }) {
   )
 }
 
-export default function Home({ user, profile, nombres }) {
+export default function Home({ user, profile, nombres, avatares }) {
   const [pelicula, setPelicula]     = useState(null)
   const [resenas, setResenas]       = useState([])
   const [loading, setLoading]       = useState(true)
@@ -321,7 +321,13 @@ export default function Home({ user, profile, nombres }) {
               {miResena ? (
                 <div className="home-resena-card mine">
                   <div className="home-resena-header">
-                    <span className="home-resena-nombre">{profile?.nombre || 'Tú'}</span>
+                    <div className="home-resena-user">
+                      {avatares[user.id]
+                        ? <img src={avatares[user.id]} alt="" className="home-resena-avatar"/>
+                        : <div className="home-resena-avatar-placeholder"/>
+                      }
+                      <span className="home-resena-nombre">{profile?.nombre || 'Tú'}</span>
+                    </div>
                     <span className="home-resena-nota"><Star size={13} fill="currentColor"/> {miResena.nota}/10</span>
                   </div>
                   {miResena.texto && <p className="home-resena-texto">{miResena.texto}</p>}
@@ -340,7 +346,13 @@ export default function Home({ user, profile, nombres }) {
               {otraResena ? (
                 <div className="home-resena-card">
                   <div className="home-resena-header">
-                    <span className="home-resena-nombre">{nombres[otraResena.usuario_id] || 'El otro'}</span>
+                    <div className="home-resena-user">
+                      {avatares[otraResena.usuario_id]
+                        ? <img src={avatares[otraResena.usuario_id]} alt="" className="home-resena-avatar"/>
+                        : <div className="home-resena-avatar-placeholder"/>
+                      }
+                      <span className="home-resena-nombre">{nombres[otraResena.usuario_id] || 'El otro'}</span>
+                    </div>
                     <span className="home-resena-nota"><Star size={13} fill="currentColor"/> {otraResena.nota}/10</span>
                   </div>
                   {otraResena.texto && <p className="home-resena-texto">{otraResena.texto}</p>}

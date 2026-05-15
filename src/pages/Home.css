@@ -134,6 +134,15 @@
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 8px;
 }
+.home-resena-user { display: flex; align-items: center; gap: 8px; }
+.home-resena-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  object-fit: cover; border: 1px solid var(--border);
+}
+.home-resena-avatar-placeholder {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--card2); border: 1px solid var(--border);
+}
 .home-resena-nombre {
   font-size: 0.82rem; font-weight: 700;
   color: var(--cream); letter-spacing: 0.3px;
