@@ -36,12 +36,19 @@ export default async function handler(req, res) {
       return res.status(200).json({ director: director?.name || null })
     }
 
-    // Búsqueda de película (por defecto)
-    const url = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(q)}&language=es-ES&page=1`
-    const data = await fetch(url, {
-      headers: { Authorization: `Bearer ${key}` }
-    }).then(r => r.json())
-    res.status(200).json({ results: data.results || [] })
+    // Búsqueda de película en inglés y español combinados
+    const headers = { Authorization: `Bearer ${key}` }
+    const base = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(q)}&page=1`
+    const [enData, esData] = await Promise.all([
+      fetch(`${base}&language=en-US`, { headers }).then(r => r.json()),
+      fetch(`${base}&language=es-ES`, { headers }).then(r => r.json()),
+    ])
+    const seen = new Set()
+    const results = []
+    for (const m of [...(enData.results || []), ...(esData.results || [])]) {
+      if (!seen.has(m.id)) { seen.add(m.id); results.push(m) }
+    }
+    res.status(200).json({ results })
 
   } catch (e) {
     res.status(500).json({ error: e.message })
