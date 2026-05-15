@@ -245,6 +245,7 @@ export default function Home({ user, profile, nombres }) {
   const [saving, setSaving]         = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const [showDetail, setShowDetail] = useState(false)
+  const [showResenaPanel, setShowResenaPanel] = useState(false)
 
   const miResena   = resenas.find(r => r.usuario_id === user.id)
   const otraResena = resenas.find(r => r.usuario_id !== user.id)
@@ -325,28 +326,13 @@ export default function Home({ user, profile, nombres }) {
                   </div>
                   {miResena.texto && <p className="home-resena-texto">{miResena.texto}</p>}
                   <button className="home-edit-btn" onClick={() => {
-                    setNota(miResena.nota); setTexto(miResena.texto || ''); setShowForm(true)
+                    setNota(miResena.nota); setTexto(miResena.texto || ''); setShowResenaPanel(true)
                   }}>
                     <Edit3 size={13}/> Editar
                   </button>
                 </div>
-              ) : showForm ? (
-                <form className="home-resena-form" onSubmit={handleSubmitResena}>
-                  <p className="home-form-label">Tu reseña de <strong>{pelicula.titulo}</strong></p>
-                  <StarRating value={nota} onChange={setNota}/>
-                  <textarea className="home-textarea"
-                    placeholder="¿Qué te pareció? (opcional)"
-                    value={texto} onChange={e => setTexto(e.target.value)} rows={4}/>
-                  <div className="home-form-actions">
-                    <button type="button" className="home-btn-cancel" onClick={() => setShowForm(false)}>Cancelar</button>
-                    <button type="submit" className="home-btn-submit" disabled={!nota || saving}>
-                      {saving ? <span className="spinner"/> : <Check size={15}/>}
-                      Guardar reseña
-                    </button>
-                  </div>
-                </form>
               ) : (
-                <button className="home-add-resena" onClick={() => setShowForm(true)}>
+                <button className="home-add-resena" onClick={() => setShowResenaPanel(true)}>
                   <Star size={16}/> Escribir mi reseña
                 </button>
               )}
@@ -405,6 +391,30 @@ export default function Home({ user, profile, nombres }) {
 
       {showDetail && pelicula && (
         <MovieDetail pelicula={pelicula} onClose={() => setShowDetail(false)}/>
+      )}
+
+      {showResenaPanel && pelicula && (
+        <div className="detail-overlay" onClick={() => setShowResenaPanel(false)}>
+          <div className="detail-panel" onClick={e => e.stopPropagation()}>
+            <div className="detail-handle"/>
+            <form className="home-resena-form" style={{ border: 'none', padding: 0, background: 'none' }}
+              onSubmit={handleSubmitResena}>
+              <p className="home-form-label">Tu reseña de <strong>{pelicula.titulo}</strong></p>
+              <StarRating value={nota} onChange={setNota}/>
+              <textarea className="home-textarea"
+                placeholder="¿Qué te pareció? (opcional)"
+                value={texto} onChange={e => setTexto(e.target.value)} rows={4}/>
+              <div className="home-form-actions">
+                <button type="button" className="home-btn-cancel"
+                  onClick={() => setShowResenaPanel(false)}>Cancelar</button>
+                <button type="submit" className="home-btn-submit" disabled={!nota || saving}>
+                  {saving ? <span className="spinner"/> : <Check size={15}/>}
+                  Guardar reseña
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </>
   )
