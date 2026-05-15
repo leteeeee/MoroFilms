@@ -1,0 +1,15 @@
+{
+  "name": "MoroccanFilms",
+  "short_name": "MoroccanFilms",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0a0a",
+  "theme_color": "#0d0a0a",
+  "icons": [
+    {
+      "src": "/raw-black-300x300.jpg",
+      "sizes": "300x300",
+      "type": "image/jpeg"
+    }
+  ]
+}
