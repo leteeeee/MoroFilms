@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Film, Star, Edit3, Check, Clock, Search, X, Clapperboard, User, ArrowLeft, Calendar, ChevronDown } from 'lucide-react'
+import { Film, Star, Edit3, Check, Search, X, Clapperboard, User, ArrowLeft, ChevronDown } from 'lucide-react'
 import './Home.css'
 
 function Countdown({ fechaLimite }) {
@@ -66,12 +66,6 @@ function MovieDetail({ pelicula, onClose }) {
               {pelicula.anio && <span className="detail-anio">{pelicula.anio}</span>}
               {pelicula.director && <span className="detail-director">Dir. {pelicula.director}</span>}
             </div>
-            {pelicula.fecha_limite && (
-              <div className="detail-deadline">
-                <Calendar size={13}/>
-                <span>Ver antes del {new Date(pelicula.fecha_limite).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</span>
-              </div>
-            )}
             {pelicula.descripcion && (
               <p className="detail-sinopsis">{pelicula.descripcion}</p>
             )}
@@ -85,18 +79,6 @@ function MovieDetail({ pelicula, onClose }) {
   )
 }
 
-const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
-
-function nextWeekday(dayIndex) {
-  // dayIndex: 0=Lunes … 6=Domingo
-  const today = new Date()
-  const todayIdx = (today.getDay() + 6) % 7 // convierte domingo=0 a domingo=6
-  let diff = dayIndex - todayIdx
-  if (diff <= 0) diff += 7
-  const d = new Date(today)
-  d.setDate(today.getDate() + diff)
-  return d.toISOString().slice(0, 10)
-}
 
 function SearchPanel({ user, onClose, onActivated }) {
   const [mode, setMode]         = useState('movie')
@@ -107,8 +89,7 @@ function SearchPanel({ user, onClose, onActivated }) {
   const [dirFilms, setDirFilms] = useState([])
   const [loadingDir, setLoadDir]= useState(false)
   const [saving, setSaving]     = useState(false)
-  const [selected, setSelected] = useState(null)  // película pendiente de confirmar día
-  const [diaIdx, setDiaIdx]     = useState(null)  // índice del día elegido
+  const [selected, setSelected] = useState(null)
 
   const search = async () => {
     if (!q.trim()) return
@@ -133,8 +114,8 @@ function SearchPanel({ user, onClose, onActivated }) {
     setLoadDir(false)
   }
 
-  const confirmarDia = async () => {
-    if (diaIdx === null || !selected) return
+  const confirmar = async () => {
+    if (!selected) return
     setSaving(true)
 
     let directorNombre = director?.name || null
@@ -162,7 +143,6 @@ function SearchPanel({ user, onClose, onActivated }) {
       anio: parseInt(selected.release_date?.slice(0, 4)),
       descripcion: selected.overview,
       director: directorNombre,
-      fecha_limite: nextWeekday(diaIdx),
       elegida_por: user.id, activa: true,
     })
     setSaving(false)
@@ -245,23 +225,14 @@ function SearchPanel({ user, onClose, onActivated }) {
         </div>
       </div>
 
-      {/* Modal elegir día */}
+      {/* Modal confirmar película */}
       {selected && (
         <div className="modal-overlay" onClick={() => setSelected(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>¿Cuándo la veis? <em>{selected.title}</em></h3>
-            <div className="dia-grid">
-              {DIAS.map((dia, i) => (
-                <button key={i}
-                  className={`dia-btn ${diaIdx === i ? 'active' : ''}`}
-                  onClick={() => setDiaIdx(i)}>
-                  {dia}
-                </button>
-              ))}
-            </div>
+            <h3>Poner en cartelera: <em>{selected.title}</em></h3>
             <div className="modal-actions">
               <button className="modal-cancel" onClick={() => setSelected(null)}>Cancelar</button>
-              <button className="modal-confirm" onClick={confirmarDia} disabled={diaIdx === null || saving}>
+              <button className="modal-confirm" onClick={confirmar} disabled={saving}>
                 {saving ? <span className="spinner"/> : <Check size={15}/>}
                 Confirmar
               </button>
@@ -351,7 +322,6 @@ export default function Home({ user, profile, nombres, avatares }) {
               <div className="home-hero-overlay">
                 <div className="home-hero-label">
                   <span>EN CARTELERA</span>
-                  {pelicula.fecha_limite && <Countdown fechaLimite={pelicula.fecha_limite}/>}
                 </div>
                 <h2 className="home-hero-titulo">{pelicula.titulo}</h2>
                 <div className="home-hero-meta">
