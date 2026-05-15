@@ -210,7 +210,7 @@ export default function Home({ user, profile, nombres }) {
   const [saving, setSaving]       = useState(false)
   const [showSearch, setShowSearch] = useState(false)
 
-  const miResena = resenas.find(r => r.usuario_id === user.id)
+  const miResena   = resenas.find(r => r.usuario_id === user.id)
   const otraResena = resenas.find(r => r.usuario_id !== user.id)
 
   useEffect(() => { loadPelicula() }, [])
@@ -245,6 +245,12 @@ export default function Home({ user, profile, nombres }) {
   if (loading) return <div className="home-loading"><span className="spinner"/> Cargando…</div>
 
   const ambosResenaron = resenas.length >= 2
+
+  // Turno: puedes recomendar si no hay peli activa,
+  // o si tú no la elegiste Y el plazo ya pasó
+  const plazoAcabado = !pelicula?.fecha_limite || new Date(pelicula.fecha_limite) <= new Date()
+  const esMiTurno = !pelicula || (pelicula.elegida_por !== user.id && plazoAcabado)
+  const otroNombre = nombres[Object.keys(nombres).find(k => k !== user.id)] || 'el otro'
 
   return (
     <>
@@ -350,10 +356,22 @@ export default function Home({ user, profile, nombres }) {
       </div>
 
       {/* Barra búsqueda fija */}
-      <div className="home-search-bar" onClick={() => setShowSearch(true)}>
-        <Search size={17} className="home-search-bar-icon"/>
-        <span>Buscar siguiente película…</span>
-      </div>
+      {esMiTurno ? (
+        <div className="home-search-bar" onClick={() => setShowSearch(true)}>
+          <Search size={17} className="home-search-bar-icon"/>
+          <span>Buscar siguiente película…</span>
+        </div>
+      ) : (
+        <div className="home-search-bar home-search-bar--disabled">
+          <Clock size={17} className="home-search-bar-icon"/>
+          <span>
+            {pelicula?.elegida_por === user.id && !plazoAcabado
+              ? `Turno de ${otroNombre} cuando acabe el plazo`
+              : `Es el turno de ${otroNombre}`
+            }
+          </span>
+        </div>
+      )}
 
       {/* Panel búsqueda */}
       {showSearch && (

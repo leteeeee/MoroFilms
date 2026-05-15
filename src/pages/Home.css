@@ -195,6 +195,14 @@
   font-size: 0.92rem;
   font-weight: 500;
 }
+.home-search-bar--disabled {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  cursor: default;
+}
+.home-search-bar--disabled .home-search-bar-icon { color: var(--gray); }
+.home-search-bar--disabled span { color: var(--gray); }
 
 /* Overlay búsqueda */
 .search-overlay {
