@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { Film, Star, Edit3, Check, Search, X, Clapperboard, User, ArrowLeft, ChevronDown, Clock } from 'lucide-react'
+import { useSettings, THEMES, FONTS } from '../hooks/useSettings'
 import './Home.css'
 import './Propuestas.css'
 
@@ -242,7 +243,51 @@ function SearchPanel({ user, onClose, onActivated }) {
 
 const fmtNota = n => `${n % 2 === 0 ? n/2 : (n/2).toFixed(1)}/5`
 
+function SettingsPanel({ onClose }) {
+  const { theme, setTheme, font, setFont } = useSettings()
+  return (
+    <div className="detail-overlay" onClick={onClose}>
+      <div className="detail-panel" onClick={e => e.stopPropagation()}>
+        <div className="detail-handle"/>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <img src="/raw-black-300x300.jpg" alt="logo" style={{ height: '28px', borderRadius: '3px' }}/>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--gray)', padding: '4px' }}>
+            <X size={18}/>
+          </button>
+        </div>
+
+        <div className="settings-section">
+          <p className="settings-label">Color de acento</p>
+          <div className="settings-swatches">
+            {THEMES.map(t => (
+              <button key={t.id} className={`swatch ${theme === t.id ? 'swatch-active' : ''}`}
+                style={{ background: t.red }} onClick={() => setTheme(t.id)}>
+                {theme === t.id && <Check size={12} color="#fff" strokeWidth={3}/>}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <p className="settings-label">Fuente</p>
+          <div className="settings-fonts">
+            {FONTS.map(f => (
+              <button key={f.id}
+                className={`settings-font-btn ${font === f.id ? 'active' : ''}`}
+                style={{ fontFamily: f.serif }}
+                onClick={() => setFont(f.id)}>
+                {f.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Home({ user, profile, nombres, avatares }) {
+  useSettings()
   const [pelicula, setPelicula]         = useState(null)
   const [resenas, setResenas]           = useState([])
   const [ultimaElegidaPor, setUltima]   = useState(null) // elegida_por de la última peli archivada
@@ -250,9 +295,10 @@ export default function Home({ user, profile, nombres, avatares }) {
   const [nota, setNota]                 = useState(0)
   const [texto, setTexto]               = useState('')
   const [saving, setSaving]             = useState(false)
-  const [showSearch, setShowSearch]     = useState(false)
-  const [showDetail, setShowDetail]     = useState(false)
+  const [showSearch, setShowSearch]         = useState(false)
+  const [showDetail, setShowDetail]         = useState(false)
   const [showResenaPanel, setShowResenaPanel] = useState(false)
+  const [showSettings, setShowSettings]     = useState(false)
 
   const miResena   = resenas.find(r => r.usuario_id === user.id)
   const otraResena = resenas.find(r => r.usuario_id !== user.id)
@@ -309,6 +355,11 @@ export default function Home({ user, profile, nombres, avatares }) {
   return (
     <>
       <div className="home-page" style={{ paddingBottom: '110px' }}>
+        <div className="home-topbar">
+          <img src="/raw-black-300x300.jpg" alt="logo" className="home-logo"
+            onClick={() => setShowSettings(true)}/>
+        </div>
+
         {pelicula ? (
           <>
             {/* Card principal */}
@@ -418,6 +469,8 @@ export default function Home({ user, profile, nombres, avatares }) {
       {showSearch && (
         <SearchPanel user={user} onClose={() => setShowSearch(false)} onActivated={loadPelicula}/>
       )}
+
+      {showSettings && <SettingsPanel onClose={() => setShowSettings(false)}/>}
 
       {showDetail && pelicula && (
         <MovieDetail pelicula={pelicula} onClose={() => setShowDetail(false)}/>
