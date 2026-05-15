@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Film, Star, Edit3, Check, Search, X, Clapperboard, User, ArrowLeft, ChevronDown } from 'lucide-react'
+import { Film, Star, Edit3, Check, Search, X, Clapperboard, User, ArrowLeft, ChevronDown, Clock } from 'lucide-react'
 import './Home.css'
 
 function Countdown({ fechaLimite }) {
@@ -89,7 +89,6 @@ function SearchPanel({ user, onClose, onActivated }) {
   const [dirFilms, setDirFilms] = useState([])
   const [loadingDir, setLoadDir]= useState(false)
   const [saving, setSaving]     = useState(false)
-  const [selected, setSelected] = useState(null)
 
   const search = async () => {
     if (!q.trim()) return
@@ -114,14 +113,14 @@ function SearchPanel({ user, onClose, onActivated }) {
     setLoadDir(false)
   }
 
-  const confirmar = async () => {
-    if (!selected) return
+  const activar = async (movie) => {
+    if (saving) return
     setSaving(true)
 
     let directorNombre = director?.name || null
     if (!directorNombre) {
       try {
-        const cr = await fetch(`/api/tmdb-search?q=${selected.id}&type=credits`).then(r => r.json())
+        const cr = await fetch(`/api/tmdb-search?q=${movie.id}&type=credits`).then(r => r.json())
         directorNombre = cr.director || null
       } catch {}
     }
@@ -137,11 +136,11 @@ function SearchPanel({ user, onClose, onActivated }) {
     }
 
     await supabase.from('peliculas').insert({
-      tmdb_id: selected.id, titulo: selected.title,
-      titulo_original: selected.original_title,
-      poster: selected.poster_path,
-      anio: parseInt(selected.release_date?.slice(0, 4)),
-      descripcion: selected.overview,
+      tmdb_id: movie.id, titulo: movie.title,
+      titulo_original: movie.original_title,
+      poster: movie.poster_path,
+      anio: parseInt(movie.release_date?.slice(0, 4)),
+      descripcion: movie.overview,
       director: directorNombre,
       elegida_por: user.id, activa: true,
     })
@@ -205,7 +204,7 @@ function SearchPanel({ user, onClose, onActivated }) {
           ))}
 
           {(mode === 'movie' || director) && films.map(m => (
-            <div key={m.id} className="ms-result" onClick={() => setSelected(m)}>
+            <div key={m.id} className="ms-result" onClick={() => activar(m)}>
               {m.poster_path
                 ? <img src={`https://image.tmdb.org/t/p/w92${m.poster_path}`} alt={m.title}/>
                 : <div className="ms-no-poster"><Clapperboard size={16}/></div>}
@@ -227,21 +226,6 @@ function SearchPanel({ user, onClose, onActivated }) {
       </div>
     </div>
 
-      {/* Modal confirmar película */}
-      {selected && (
-        <div className="modal-overlay" onClick={() => setSelected(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>Poner en cartelera: <em>{selected.title}</em></h3>
-            <div className="modal-actions">
-              <button className="modal-cancel" onClick={() => setSelected(null)}>Cancelar</button>
-              <button className="modal-confirm" onClick={confirmar} disabled={saving}>
-                {saving ? <span className="spinner"/> : <Check size={15}/>}
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }
