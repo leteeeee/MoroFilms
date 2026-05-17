@@ -75,6 +75,17 @@
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 4px;
 }
+.hist-resena-user { display: flex; align-items: center; gap: 6px; }
+.hist-resena-avatar {
+  width: 20px; height: 20px; border-radius: 50%;
+  object-fit: cover; border: 1px solid var(--border); flex-shrink: 0;
+}
+.hist-resena-avatar-placeholder {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--card); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gray); flex-shrink: 0;
+}
 .hist-resena-nombre { font-size: 0.75rem; font-weight: 700; color: var(--cream); letter-spacing: 0.3px; }
 .hist-resena-nota {
   display: flex; align-items: center; gap: 3px;

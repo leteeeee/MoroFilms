@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Star, Film, Trash2, X } from 'lucide-react'
+import { Star, Film, Trash2, X, User } from 'lucide-react'
 import './Historial.css'
 
-export default function Historial({ nombres }) {
+export default function Historial({ nombres, avatares = {} }) {
   const [peliculas, setPeliculas] = useState([])
   const [loading, setLoading]     = useState(true)
   const [editMode, setEditMode]   = useState(false)
@@ -85,7 +85,13 @@ export default function Historial({ nombres }) {
                     {resenas.map(r => (
                       <div key={r.id} className="hist-resena">
                         <div className="hist-resena-header">
-                          <span className="hist-resena-nombre">{nombres[r.usuario_id] || '—'}</span>
+                          <div className="hist-resena-user">
+                            {avatares[r.usuario_id]
+                              ? <img src={avatares[r.usuario_id]} alt="" className="hist-resena-avatar"/>
+                              : <div className="hist-resena-avatar-placeholder"><User size={10}/></div>
+                            }
+                            <span className="hist-resena-nombre">{nombres[r.usuario_id] || '—'}</span>
+                          </div>
                           <span className="hist-resena-nota">
                             <Star size={11} fill="currentColor"/> {r.nota % 2 === 0 ? r.nota/2 : (r.nota/2).toFixed(1)}/5
                           </span>
