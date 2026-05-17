@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { Film, Star, Edit3, Check, Search, X, Clapperboard, User, ArrowLeft, ChevronDown, Clock } from 'lucide-react'
-import { useSettings, THEMES, FONTS } from '../hooks/useSettings'
+import { useSettings, THEMES, BACKGROUNDS, FONTS } from '../hooks/useSettings'
 import './Home.css'
 import './Propuestas.css'
 
@@ -244,7 +244,7 @@ function SearchPanel({ user, onClose, onActivated }) {
 const fmtNota = n => `${n % 2 === 0 ? n/2 : (n/2).toFixed(1)}/5`
 
 function SettingsPanel({ onClose }) {
-  const { theme, setTheme, font, setFont } = useSettings()
+  const { theme, setTheme, bg, setBg, font, setFont } = useSettings()
   return (
     <div className="detail-overlay" onClick={onClose}>
       <div className="detail-panel" onClick={e => e.stopPropagation()}>
@@ -261,8 +261,21 @@ function SettingsPanel({ onClose }) {
           <div className="settings-swatches">
             {THEMES.map(t => (
               <button key={t.id} className={`swatch ${theme === t.id ? 'swatch-active' : ''}`}
-                style={{ background: t.red }} onClick={() => setTheme(t.id)}>
-                {theme === t.id && <Check size={12} color="#fff" strokeWidth={3}/>}
+                style={{ background: t.red }} title={t.name} onClick={() => setTheme(t.id)}>
+                {theme === t.id && <Check size={11} color="#fff" strokeWidth={3}/>}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <p className="settings-label">Fondo</p>
+          <div className="settings-swatches">
+            {BACKGROUNDS.map(b => (
+              <button key={b.id} className={`swatch ${bg === b.id ? 'swatch-active' : ''}`}
+                style={{ background: b.bg, border: `2px solid ${b.border}` }}
+                title={b.name} onClick={() => setBg(b.id)}>
+                {bg === b.id && <Check size={11} color="#fff" strokeWidth={3}/>}
               </button>
             ))}
           </div>
