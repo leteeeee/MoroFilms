@@ -93,3 +93,74 @@
 }
 .hist-resena-texto { font-size: 0.77rem; color: var(--gray); line-height: 1.5; font-style: italic; }
 .hist-pending { font-size: 0.72rem; color: var(--gray); font-style: italic; }
+
+/* Badge recomendador */
+.hist-recomendada {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.68rem; color: var(--gray);
+  margin-bottom: 8px;
+}
+.hist-rec-avatar {
+  width: 16px; height: 16px; border-radius: 50%;
+  object-fit: cover; border: 1px solid var(--border);
+}
+.hist-rec-avatar-placeholder {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--card2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; color: var(--gray);
+}
+.hist-recomendada strong { color: var(--cream); }
+
+/* Panel competición */
+.comp-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+}
+.comp-title {
+  font-family: var(--serif); font-size: 1.1rem;
+  font-weight: 800; color: var(--cream);
+}
+.comp-versus {
+  display: flex; gap: 12px;
+}
+.comp-player {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px 10px; position: relative;
+  transition: border-color 0.2s;
+}
+.comp-player--winner {
+  border-color: var(--gold); background: var(--gold-dim);
+}
+.comp-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  object-fit: cover; border: 2px solid var(--border);
+}
+.comp-avatar-placeholder {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--card2); border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center; color: var(--gray);
+}
+.comp-nombre { font-size: 0.82rem; font-weight: 700; color: var(--cream); }
+.comp-media  { font-size: 1.3rem; font-weight: 800; color: var(--gold); font-family: var(--serif); }
+.comp-pelis  { font-size: 0.68rem; color: var(--gray); }
+.comp-crown  { font-size: 1.2rem; position: absolute; top: -12px; }
+.comp-resultado {
+  font-size: 0.82rem; color: var(--gray); text-align: center;
+  padding: 4px 0; line-height: 1.5;
+}
+.comp-resultado strong { color: var(--cream); }
+
+.comp-detalle { display: flex; flex-direction: column; gap: 12px; }
+.comp-detalle-user { display: flex; flex-direction: column; gap: 4px; }
+.comp-detalle-nombre {
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.2px; color: var(--gray); margin-bottom: 2px;
+}
+.comp-detalle-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.78rem; padding: 5px 8px;
+  background: var(--card); border-radius: 3px;
+}
+.comp-detalle-titulo { color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; }
+.comp-detalle-nota   { color: var(--gold); font-weight: 700; flex-shrink: 0; }
+.comp-sin-pelis { font-size: 0.75rem; color: var(--gray); font-style: italic; }
